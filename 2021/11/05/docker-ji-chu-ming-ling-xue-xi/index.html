@@ -4,9 +4,12 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="自我介绍, Squirt1e&#39;s blog">
-    <meta name="description" content="我是Squirt1e，坐标北京，是一名即将步入研究生阶段的web🐕。
-我的梦想是成为安全研究员，并且做出一些有用的工作，但这个梦想可能难以实现。一个原因是研究生阶段的方向可能与web安全研究出入比较大，我早就知道研究生不太可能做“传统”网">
+    <meta name="keywords" content="docker基础命令学习, Squirt1e&#39;s blog">
+    <meta name="description" content="搜索镜像12docker search xxxdocker search --filter=STARS=1000       #过滤，指定搜索stars大于1000的镜像
+
+search指令可以搜索指定名称或者仓库的镜像的信息。
+
+STAR">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -18,7 +21,7 @@
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>自我介绍 | Squirt1e&#39;s blog</title>
+    <title>docker基础命令学习 | Squirt1e&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -335,12 +338,12 @@
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/1.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/23.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">自我介绍</h1>
+                    <h1 class="description center-align post-title">docker基础命令学习</h1>
                 </div>
             </div>
         </div>
@@ -364,8 +367,8 @@
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/%E5%85%B3%E4%BA%8ESquirt1e/">
-                                <span class="chip bg-color">关于Squirt1e</span>
+                            <a href="/tags/docker/">
+                                <span class="chip bg-color">docker</span>
                             </a>
                         
                     </div>
@@ -376,8 +379,8 @@
                     <div class="post-cate">
                         <i class="fas fa-bookmark fa-fw icon-category"></i>
                         
-                            <a href="/categories/%E9%97%B2%E8%81%8A/" class="post-category">
-                                闲聊
+                            <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
+                                日常学习
                             </a>
                         
                     </div>
@@ -389,7 +392,7 @@
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-10-31
+                    2021-11-05
                 </div>
                 
 
@@ -410,10 +413,62 @@
 
         <div class="card-content article-card-content">
             <div id="articleContent">
-                <p>我是Squirt1e，坐标北京，是一名即将步入研究生阶段的web🐕。</p>
-<p>我的梦想是成为安全研究员，并且做出一些有用的工作，但这个梦想可能难以实现。一个原因是研究生阶段的方向可能与web安全研究出入比较大，我早就知道研究生不太可能做“传统”网安。但从导师那里得知自己和“传统”网安无缘，是有一点点失望。另一个原因是我比较菜，各位师傅看我的文章就知道我的水平并不高，同年龄段大师傅的仓库里0day满天飞，而我还在思考CMS的代码为什么这么写。菜的原因（我不承认我脑袋不行:&gt;）大概是因为大一我在摆烂，而大二大三在卷一些实际用处不大的东西。</p>
-<p>尽管如此，我还是想尝试坚持一下，毕竟web安全是我目前唯一感兴趣的点。这个博客算是用来督促我学习web的，争取每周发一篇认真去思考打磨的文章。等我认为博客质量过关了，我才会去发安全研究分类的文章。</p>
-<p>联系方式：<a href="mailto:&#49;&#51;&#x30;&#x33;&#x35;&#49;&#x36;&#50;&#48;&#52;&#x40;&#x71;&#x71;&#46;&#99;&#111;&#109;">&#49;&#51;&#x30;&#x33;&#x35;&#49;&#x36;&#50;&#48;&#52;&#x40;&#x71;&#x71;&#46;&#99;&#111;&#109;</a></p>
+                <h4 id="搜索镜像"><a href="#搜索镜像" class="headerlink" title="搜索镜像"></a>搜索镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker search xxx</span><br><span class="line">docker search --filter=STARS=1000       #过滤，指定搜索stars大于1000的镜像</span><br></pre></td></tr></table></figure>
+
+<p>search指令可以搜索指定名称或者仓库的镜像的信息。</p>
+<ol>
+<li>STARS: 镜像的stars—越高越受欢迎，</li>
+<li>OFFICIAL: 是否是官方提供的</li>
+<li>AUTOMATED:  是不是自动化的</li>
+</ol>
+<h4 id="拉取镜像"><a href="#拉取镜像" class="headerlink" title="拉取镜像"></a>拉取镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker pull xxx</span><br><span class="line">docker pull xxx:tag       #指定版本</span><br></pre></td></tr></table></figure>
+
+<p>把指定镜像拉到本地仓库，默认为拉取最新版本。可以通过[镜像:版本号]的形式指定对应版本号的镜像下载，例如：docker pull mysql:5.6.50</p>
+<h4 id="查看镜像"><a href="#查看镜像" class="headerlink" title="查看镜像"></a>查看镜像</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker images || docker images -a  #查看镜像所有信息</span><br><span class="line">docker images -aq                  #查看镜像id</span><br></pre></td></tr></table></figure>
+
+<ol>
+<li>REPOSITORY: 镜像仓库名</li>
+<li>TAG:                镜像标签</li>
+<li>IMAGE ID:       镜像id</li>
+<li>CREATED:          镜像创建时间</li>
+<li>SIZE:                镜像大小</li>
+</ol>
+<h4 id="生成容器"><a href="#生成容器" class="headerlink" title="生成容器"></a>生成容器</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker run xxx      #指定xxx镜像生成容器</span><br><span class="line">docker run -p 8080:8080 -d xxx  #容器内部8080端口映射到本地8080端口，并守护进程后台运行</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>-p：容器内部端口绑定到指定的主机端口</p>
+</li>
+<li><p>-P：容器内部端口随机映射到主机的端口</p>
+</li>
+<li><p>-t：提供终端输入</p>
+</li>
+<li><p>-i：提供交互</p>
+</li>
+<li><p>-d：容器在后台运行</p>
+</li>
+</ul>
+<h4 id="查看镜像状态"><a href="#查看镜像状态" class="headerlink" title="查看镜像状态"></a>查看镜像状态</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker ps          #查看正在运行中的的容器</span><br><span class="line">docker ps -a       #查看所有容器</span><br><span class="line">docker ps -q       #看正在运行中的的容器：仅列出编号</span><br></pre></td></tr></table></figure>
+
+<h4 id="停止容器"><a href="#停止容器" class="headerlink" title="停止容器"></a>停止容器</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker stop xxx      #指定编号</span><br></pre></td></tr></table></figure>
+
+<h4 id="运行容器"><a href="#运行容器" class="headerlink" title="运行容器"></a>运行容器</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker start XXX         #指定编号</span><br></pre></td></tr></table></figure>
+
+<h4 id="重启容器"><a href="#重启容器" class="headerlink" title="重启容器"></a>重启容器</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">docker restart xxx      #指定编号</span><br></pre></td></tr></table></figure>
+
+<h4 id="删除容器"><a href="#删除容器" class="headerlink" title="删除容器"></a>删除容器</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">docker rm xxxxxxxxxx      # 删除指定容器</span><br><span class="line">docker rm -f xxxxxxxxxx  # 强制删除运行中的容器</span><br><span class="line">docker rm -f $(docker ps -aq) # 迭代删除全部的容器</span><br></pre></td></tr></table></figure>
+
+<h4 id="进入容器的bash"><a href="#进入容器的bash" class="headerlink" title="进入容器的bash"></a>进入容器的bash</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">docker exec -it xxxxx /bin/bash   # 进入到指定容器内部进行修改  开启一个新的终端</span><br><span class="line">exit        #退出bash</span><br></pre></td></tr></table></figure>
+
+<h4 id="拷贝文件"><a href="#拷贝文件" class="headerlink" title="拷贝文件"></a>拷贝文件</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">cp ./flag xx:/var/www/html/flag      #将当前目录的flag拷贝到指定为xx id的容器/var/www/html/flag中</span><br><span class="line">cp xx:/var/www/html/flag .flag #将指定为xx id的容器/var/www/html下的flag文件拷贝到当前目录flag文件中</span><br></pre></td></tr></table></figure>
+
+<h4 id="docker-compose安装"><a href="#docker-compose安装" class="headerlink" title="docker-compose安装"></a>docker-compose安装</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">curl -L https://get.daocloud.io/docker/compose/releases/download/1.25.1/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose</span><br><span class="line">chmod +x /usr/local/bin/docker-compose</span><br></pre></td></tr></table></figure>
+
+<p>之后就是联动vulhub一键搭环境。</p>
+<h4 id="vulhub一键搭漏洞环境"><a href="#vulhub一键搭漏洞环境" class="headerlink" title="vulhub一键搭漏洞环境"></a>vulhub一键搭漏洞环境</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta prompt_">#</span><span class="language-bash">首先进入对应漏洞环境的文件夹</span></span><br><span class="line">Docker-compose up -d  #根据docker-compose.yml自动拉取容器并启动。</span><br></pre></td></tr></table></figure>
+
+<p>tomcat8的docker-compose.yml:</p>
+<figure class="highlight yaml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="attr">version:</span> <span class="string">&#x27;2&#x27;</span></span><br><span class="line"><span class="attr">services:</span></span><br><span class="line"> <span class="attr">tomcat:</span></span><br><span class="line">   <span class="attr">image:</span> <span class="string">vulhub/tomcat:8.0</span></span><br><span class="line">   <span class="attr">volumes:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./tomcat-users.xml:/usr/local/tomcat/conf/tomcat-users.xml</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./context.xml:/usr/local/tomcat/webapps/manager/META-INF/context.xml</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">./context.xml:/usr/local/tomcat/webapps/host-manager/META-INF/context.xml</span></span><br><span class="line">   <span class="attr">ports:</span></span><br><span class="line">    <span class="bullet">-</span> <span class="string">&quot;8080:8080&quot;</span></span><br></pre></td></tr></table></figure>
+
 
                 
             </div>
@@ -440,7 +495,7 @@
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://www.squirt1e.top/2021/10/31/zi-wo-jie-shao/">http://www.squirt1e.top/2021/10/31/zi-wo-jie-shao/</a>
+                    <a href="http://www.squirt1e.top/2021/11/05/docker-ji-chu-ming-ling-xue-xi/">http://www.squirt1e.top/2021/11/05/docker-ji-chu-ming-ling-xue-xi/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -478,8 +533,8 @@
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/%E5%85%B3%E4%BA%8ESquirt1e/">
-                                    <span class="chip bg-color">关于Squirt1e</span>
+                                <a href="/tags/docker/">
+                                    <span class="chip bg-color">docker</span>
                                 </a>
                             
                         </div>
@@ -562,13 +617,13 @@
             <div class="article-badge left-badge text-color">
                 <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
             <div class="card">
-                <a href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/">
+                <a href="/2022/11/14/huan-bo-ke-la/">
                     <div class="card-image">
                         
                         
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker基础命令学习">
+                        <img src="/medias/featureimages/12.jpg" class="responsive-img" alt="换博客啦">
                         
-                        <span class="card-title">docker基础命令学习</span>
+                        <span class="card-title">换博客啦</span>
                     </div>
                 </a>
                 <div class="card-content article-content">
@@ -579,14 +634,14 @@
                     </div>
                     <div class="publish-info">
                         <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2021-11-05
+                            <i class="far fa-clock fa-fw icon-date"></i>2022-11-14
                         </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
                             
-                            <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
-                                    日常学习
+                            <a href="/categories/%E9%97%B2%E8%81%8A/" class="post-category">
+                                    闲聊
                                 </a>
                             
                             
@@ -596,8 +651,8 @@
                 
                 <div class="card-action article-tags">
                     
-                    <a href="/tags/docker/">
-                        <span class="chip bg-color">docker</span>
+                    <a href="/tags/%E5%9B%BD%E5%86%85%E6%9C%8D%E5%8A%A1%E5%99%A8/">
+                        <span class="chip bg-color">国内服务器</span>
                     </a>
                     
                 </div>
@@ -608,7 +663,7 @@
         
         <div class="article col s12 m6" data-aos="fade-up">
             <div class="article-badge right-badge text-color">
-                本篇&nbsp;<i class="far fa-dot-circle"></i>
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
             </div>
             <div class="card">
                 <a href="/2021/10/31/zi-wo-jie-shao/">
@@ -642,7 +697,6 @@
                         </span>
                     </div>
                 </div>
-
                 
                 <div class="card-action article-tags">
                     

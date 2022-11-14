@@ -4,14 +4,11 @@
 
 <head>
     <meta charset="utf-8">
-    <meta name="keywords" content="Java代码审计基础—架构, Squirt1e&#39;s blog">
+    <meta name="keywords" content="Java代码审计基础—反射, Squirt1e&#39;s blog">
     <meta name="description" content="
-架构的目的就是分层，使得职能分离。
+反射是Java的一个重要特性，通过反射可以调用程序运行时任意类、对象的方法，也能访问或修改变量的值，并且能判断对象所属的类。
 
-MVC
-M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。
-V 代表 视图（View）：负责页面展示。
-C 代表 控制器（Controller) ：处理逻辑，控制页面">
+实例化弄明白反射还是要稍微深入了解实例化的过程，下面有个样例，取自代码审计星球反射系列下ir0ny师傅的评论。">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="renderer" content="webkit|ie-stand|ie-comp">
@@ -23,7 +20,7 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
     <!-- Global site tag (gtag.js) - Google Analytics -->
 
 
-    <title>Java代码审计基础—架构 | Squirt1e&#39;s blog</title>
+    <title>Java代码审计基础—反射 | Squirt1e&#39;s blog</title>
     <link rel="icon" type="image/png" href="/favicon.png">
     
 
@@ -340,12 +337,12 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
 
 
 
-<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/20.jpg')">
+<div class="bg-cover pd-header post-cover" style="background-image: url('/medias/featureimages/3.jpg')">
     <div class="container" style="right: 0px;left: 0px;">
         <div class="row">
             <div class="col s12 m12 l12">
                 <div class="brand">
-                    <h1 class="description center-align post-title">Java代码审计基础—架构</h1>
+                    <h1 class="description center-align post-title">Java代码审计基础—反射</h1>
                 </div>
             </div>
         </div>
@@ -369,8 +366,8 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                     
                     <div class="article-tag">
                         
-                            <a href="/tags/MVC-Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">
-                                <span class="chip bg-color">MVC,Java安全基础</span>
+                            <a href="/tags/fan-she-Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">
+                                <span class="chip bg-color">fan&#39;she,Java安全基础</span>
                             </a>
                         
                     </div>
@@ -394,7 +391,7 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                 
                 <div class="post-date info-break-policy">
                     <i class="far fa-calendar-minus fa-fw"></i>发布日期:&nbsp;&nbsp;
-                    2021-11-12
+                    2022-11-14
                 </div>
                 
 
@@ -416,32 +413,131 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
         <div class="card-content article-card-content">
             <div id="articleContent">
                 <blockquote>
-<p>架构的目的就是分层，使得职能分离。</p>
+<p>反射是Java的一个重要特性，通过反射可以调用程序运行时任意类、对象的方法，也能访问或修改变量的值，并且能判断对象所属的类。</p>
 </blockquote>
-<h4 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h4><ul>
-<li>M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。</li>
-<li>V 代表 视图（View）：负责页面展示。</li>
-<li>C 代表 控制器（Controller) ：处理逻辑，控制页面跳转。</li>
+<h4 id="实例化"><a href="#实例化" class="headerlink" title="实例化"></a>实例化</h4><p>弄明白反射还是要稍微深入了解实例化的过程，下面有个样例，取自代码审计星球反射系列下ir0ny师傅的评论。</p>
+<p>Person p &#x3D; new Person(“zhangsan”,20); 实例化Person类，这句话做了什么？ </p>
+<ol>
+<li>因为new用到了Person.class.所以会先找到Person.class文件并加载到内存中。</li>
+<li>执行该类中的static代码块，如果有的话，给Person.class类进行初始化。</li>
+<li>在堆内存中开辟空间，分配内存地址。</li>
+<li>在堆内存中建立对象的特有属性。并进行默认初始化。 </li>
+<li>对属性进行显示初始化。</li>
+<li>对对象进行构造代码块初始化。</li>
+<li>对对象进行对应的构造函数初始化。</li>
+<li>将内存地址付给栈内存中的p变量。</li>
+</ol>
+<p>实例化TrainPrint，下面的代码将输出什么？getClass以及class就先理解为java文件编译后的class文件好了，代码改自Java安全漫谈。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">class</span> <span class="title class_">TrainPrint</span> &#123;</span><br><span class="line">    &#123;</span><br><span class="line">        System.out.printf(<span class="string">&quot;Empty block initial %s\n&quot;</span>, <span class="built_in">this</span>.getClass());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">static</span> &#123;</span><br><span class="line">        System.out.printf(<span class="string">&quot;Static initial %s\n&quot;</span>, TrainPrint.class);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="keyword">void</span> <span class="title function_">fuck</span><span class="params">()</span>&#123;</span><br><span class="line">        System.out.println(<span class="built_in">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">public</span> <span class="title function_">TrainPrint</span><span class="params">()</span> &#123;</span><br><span class="line">        System.out.printf(<span class="string">&quot;Initial %s\n&quot;</span>, <span class="built_in">this</span>.getClass());</span><br><span class="line">        <span class="built_in">this</span>.fuck();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line">--------------------------------------------------------------------------------</span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title function_">main</span><span class="params">(String[] args)</span>&#123;</span><br><span class="line">        TrainPrint trainPrint=<span class="keyword">new</span> <span class="title class_">TrainPrint</span>();</span><br><span class="line">    &#125;</span><br><span class="line">----------------------------------output----------------------------------------</span><br><span class="line">Static initial <span class="keyword">class</span> <span class="title class_">com</span>.ms08067.TrainPrint</span><br><span class="line">Empty block initial <span class="keyword">class</span> <span class="title class_">com</span>.ms08067.TrainPrint</span><br><span class="line">Initial <span class="keyword">class</span> <span class="title class_">com</span>.ms08067.TrainPrint</span><br><span class="line">com.ms08067.TrainPrint@4b67cf4d</span><br></pre></td></tr></table></figure>
+
+<p>可以看到最先执行的就是静态代码块（注意这里用不了this，因为this指代当前TrainPrint这个类的对象，现在类刚刚加载，还没有分配内存地址)，随后执行代码块，然后执行构造方法，然后调用fuck方法输出this。</p>
+<h4 id="获取类对象"><a href="#获取类对象" class="headerlink" title="获取类对象"></a>获取类对象</h4><p>我的理解：类对象就是java文件编译后的class文件，字节码存放于class文件中，之后交给JVM运行，因此获得了字节码就等于我们获得了程序运行时类的状态。</p>
+<ol>
+<li>forName()</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>forName实现了动态加载类，因此还会执行静态代码块（类中static段的代码）。</p>
+<ol start="2">
+<li>类名.class</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">rt</span> <span class="operator">=</span> Runtime.class;</span><br></pre></td></tr></table></figure>
+
+<p>仅仅是获得类对象。</p>
+<ol start="3">
+<li>getClass()</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Runtime</span> <span class="variable">run</span> <span class="operator">=</span> Runtime.getRuntime();</span><br><span class="line">Class&lt;?&gt; name = run.getClass();</span><br></pre></td></tr></table></figure>
+
+<p>这种要先获取实例化对象在拿到class object。</p>
+<ol start="4">
+<li>getSystemClassLoader().loadClass()</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; name = ClassLoader.getSystemClassLoader().loadClass(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>仅仅是获得类对象。</p>
+<h4 id="获取类方法"><a href="#获取类方法" class="headerlink" title="获取类方法"></a>获取类方法</h4><ol>
+<li>getDeclaredMethods</li>
+</ol>
+<p>返回类或接口声明的所有方法，包括public、protected、private和默认方法，但不包括继承的方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; a = Runtime.class;</span><br><span class="line">Method[] declareMethods = a.getDeclaredMethods();</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>getMethods</li>
+</ol>
+<p>返回某个类的所有public方法，包括其继承类的public方法。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Class a=Runtime.class;</span><br><span class="line">Method[] methods = a.getMethods();</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>getMethod</li>
+</ol>
+<p>getMethod方法只能返回一个特定的方法。注意，第二个参数是第一个参数方法的参数，因为exec的参数是String，因此后面要跟上String.class</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Runtime</span> <span class="variable">rt</span> <span class="operator">=</span> Runtime.getRuntime();</span><br><span class="line">Class&lt;?&gt; name = rt.getClass();</span><br><span class="line"><span class="type">Method</span> <span class="variable">method</span> <span class="operator">=</span> name.getMethod(<span class="string">&quot;exec&quot;</span>,String.class);</span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>getDeclaredMethod</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; a = Runtime.class;</span><br><span class="line">Method[] declareMethods = a.getDeclaredMethod(<span class="string">&quot;exec&quot;</span>,String.class);</span><br></pre></td></tr></table></figure>
+
+<p>同上。</p>
+<h4 id="获取类的成员变量"><a href="#获取类的成员变量" class="headerlink" title="获取类的成员变量"></a>获取类的成员变量</h4><p>四个方法对应上文获取类方法的四个方法。</p>
+<ol>
+<li>getDeclaredFields</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Student</span> <span class="variable">student</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Student</span>();</span><br><span class="line">Class&lt;?&gt; name = student.getClass();</span><br><span class="line">Field[] getDeclaredFields = name.getDeclaredFields();</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>getFields</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Student</span> <span class="variable">student</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Student</span>();</span><br><span class="line">Class&lt;?&gt; name = student.getClass();</span><br><span class="line">Field[] getFields = name.getFields();</span><br></pre></td></tr></table></figure>
+
+<ol start="3">
+<li>getField</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Student</span> <span class="variable">student</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Student</span>();</span><br><span class="line">Class&lt;?&gt; name = student.getClass();</span><br><span class="line"><span class="type">Field</span> <span class="variable">getField</span> <span class="operator">=</span> name.getField(<span class="string">&quot;content&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>变量没有参数，因此获取变量自然不需要第二个参数了，注意只能获取public类型的变量。</p>
+<ol start="4">
+<li>getDeclareField</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Student</span> <span class="variable">student</span> <span class="operator">=</span> <span class="keyword">new</span> <span class="title class_">Student</span>();</span><br><span class="line">Class&lt;?&gt; name = student.getClass();</span><br><span class="line"><span class="type">Field</span> <span class="variable">getDeclaredField</span> <span class="operator">=</span> name.getDeclaredField(<span class="string">&quot;name&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h4 id="获取对象"><a href="#获取对象" class="headerlink" title="获取对象"></a>获取对象</h4><p>获取对象都是用newInstance()方法，注意要先获得类对象。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;com.ms08067.newInstance.newInstanceExample&quot;</span>);</span><br><span class="line">        <span class="comment">// 无参数</span></span><br><span class="line">System.out.println(<span class="string">&quot;无参数构造对象第一种方法：&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">no_parameters_1</span> <span class="operator">=</span> (newInstanceExample)cls.newInstance();</span><br><span class="line">System.out.println(<span class="string">&quot;无参数构造对象第二种方法&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">no_parameters_2</span> <span class="operator">=</span> newInstanceExample.class.newInstance();</span><br><span class="line"><span class="comment">// 有参数</span></span><br><span class="line">System.out.println(<span class="string">&quot;有参数构造对象第一种方法&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">have_parameters_1</span> <span class="operator">=</span> (newInstanceExample)cls.getConstructor(String.class).newInstance(<span class="string">&quot;yes&quot;</span>);</span><br><span class="line">System.out.println(<span class="string">&quot;有参数构造对象第二种方法&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">have_parameters_2</span> <span class="operator">=</span> newInstanceExample.class.getConstructor(String.class).newInstance(<span class="string">&quot;yes&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p>如果构造函数有参数，那么需要调用getConstructor()并且传入参数对应类型的类对象。</p>
+<p>但这个方法有限制：</p>
+<ul>
+<li>待实例化的类的构造函数不能是私有的</li>
 </ul>
-<p>这样的目的主要是把View和Model分离，改样式就动View层，Controller负责逻辑，也就是与V和M之间的联系。</p>
-<h4 id="SpringMVC"><a href="#SpringMVC" class="headerlink" title="SpringMVC"></a>SpringMVC</h4><p>可以看到MVC分离的还不够细化，因此SpringMVC实现了把控制器分为控制层以及业务层（实际上咱现在用的基本都是SpringMVC以及SpringBoot这种）</p>
-<p>SpringMVC：视图层调用控制层，控制层调用业务层，业务层调用数据访问层。</p>
-<p><strong>数据访问层</strong>：data access object(DAO)，DAO就是封装实体类在数据库中增删改查的操作。</p>
-<p><strong>业务层</strong>：用来写业务逻辑的<br>对于Service，就是 Servlet 和 Dao 层之间缓冲的层。通过这一层来进行解耦，使得 Dao 层内的变化不会直接影响到 Servlet 层。</p>
-<p><strong>控制层</strong>：MVC中的Controller，用于处理前端页面跳转，调用业务层实现前端页面动态数据的展示。</p>
-<p><strong>视图层</strong>：页面展示。</p>
-<h4 id="JAVAEE分层模型"><a href="#JAVAEE分层模型" class="headerlink" title="JAVAEE分层模型"></a>JAVAEE分层模型</h4><p>就是SpringMVC，除此之外多了一个DO。<br><strong>Domain Object(领域对象)层</strong></p>
-<p>DO是从现实世界中抽象出来的有形或无形的业务实体。</p>
-<p>说白了像一个entity对应一张表叫DO。</p>
-<p><strong>DAO(数据访问对象)层</strong><br>DAO实现了对数据库的CRUD等常见操作。</p>
-<p><strong>Service(业务逻辑)层</strong><br>实现了系统所需要的业务逻辑方法。</p>
-<p><strong>Controller(控制器)层</strong><br>本层由一系列控制器组成，这些控制器用于拦截用户的请求，并调用业务逻辑组件的业务逻辑方法去处理用户请求，然后根据处理结果向不同的View组件转发。</p>
-<p><strong>View(表现层)层</strong><br>页面展示。</p>
-<p>分层模型图如下：</p>
-<p><img src="https://img-blog.csdnimg.cn/3a9d1d1175bf4645b35363b16a857e90.png#pic_center" alt="出自JAVA代码安全审计"></p>
-<h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><p>1.Java代码安全审计（入门篇）                徐焱</p>
-<p>2.<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45442296/article/details/123111903">https://blog.csdn.net/weixin_45442296/article/details/123111903</a>      JavaRange</p>
-<p>3.<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43391574/article/details/110944815">https://blog.csdn.net/qq_43391574/article/details/110944815</a>             落雨青石街</p>
+<p>如果有private构造函数则不能实例化。</p>
+<h4 id="调用方法"><a href="#调用方法" class="headerlink" title="调用方法"></a>调用方法</h4><ol>
+<li>直接通过.调用方法，因此要在实例化对象的基础上获取上。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;com.ms08067.newInstance.newInstanceExample&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">no_parameters</span> <span class="operator">=</span> newInstanceExample.class.newInstance();</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">have_parameters</span> <span class="operator">=</span> newInstanceExample.class.getConstructor(String.class).newInstance(<span class="string">&quot;yes&quot;</span>);</span><br><span class="line"><span class="comment">// 调用对象的方法</span></span><br><span class="line"><span class="comment">// 直接调用</span></span><br><span class="line">no_parameters.method_1();</span><br><span class="line">no_parameters.method_2(<span class="string">&quot;no!&quot;</span>);</span><br><span class="line">have_parameters.method_1();</span><br><span class="line">have_parameters.method_2(<span class="string">&quot;yes!&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<ol start="2">
+<li>invoke调用，因此要在获得类对象的基础上获取方法。</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Class&lt;?&gt; cls = Class.forName(<span class="string">&quot;com.ms08067.newInstance.newInstanceExample&quot;</span>);</span><br><span class="line"><span class="type">newInstanceExample</span> <span class="variable">no_parameters</span> <span class="operator">=</span> newInstanceExample.class.newInstance();</span><br><span class="line"><span class="type">Object</span> <span class="variable">method</span> <span class="operator">=</span> cls.getMethod(<span class="string">&quot;method_2&quot;</span>, String.class).invoke(no_parameters,<span class="string">&quot;invoke方法&quot;</span>);</span><br><span class="line">System.out.println(method);</span><br><span class="line"><span class="type">String</span> <span class="variable">obj</span> <span class="operator">=</span> (String) cls.getDeclaredMethod(<span class="string">&quot;method_1&quot;</span>).invoke(no_parameters);</span><br><span class="line">System.out.println(obj);</span><br></pre></td></tr></table></figure>
+
+<h4 id="执行系统命令"><a href="#执行系统命令" class="headerlink" title="执行系统命令"></a>执行系统命令</h4><p>在学会了invoke调用，接着来学习通过反射执行系统命令。</p>
+<h5 id="Runtime"><a href="#Runtime" class="headerlink" title="Runtime"></a>Runtime</h5><p>Runtime这个类有exec可以调用系统命令，因此我们可以加载Runtime这个类。</p>
+<p>读一下Runtime源码，就会发现Runtime的构造方法是静态的，因此无法通过newInstance实例化Runtime，可以自己去试一下，new Runtime会报错。而正确的获得实例化对象的方法是Runtime.getRuntime()【getRuntime方法是静态的】</p>
+<p>因此，<em>第一种方法</em>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>);</span><br><span class="line">clazz.getMethod(<span class="string">&quot;exec&quot;</span>, String.class).invoke(clazz.getMethod(<span class="string">&quot;getRuntime&quot;</span>).invoke(clazz), <span class="string">&quot;calc.exe&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<p><strong>clazz.getMethod(“getRuntime”).invoke(clazz)通过这段代码调用getRuntime获得对象，然后传进invoke里进而执行exec函数。</strong></p>
+<p>如果不调用getRuntime，也可以通过getDeclaredConstructor并且设置作用域执行，<em>第二种方法</em>：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.Runtime&quot;</span>); </span><br><span class="line"><span class="type">Constructor</span> <span class="variable">m</span> <span class="operator">=</span> clazz.getDeclaredConstructor(); </span><br><span class="line">m.setAccessible(<span class="literal">true</span>); </span><br><span class="line">clazz.getMethod(<span class="string">&quot;exec&quot;</span>, String.class).invoke(m.newInstance(), <span class="string">&quot;calc.exe&quot;</span>);</span><br></pre></td></tr></table></figure>
+
+<h5 id="ProcessBuilder"><a href="#ProcessBuilder" class="headerlink" title="ProcessBuilder"></a>ProcessBuilder</h5><p>ProcessBuilder这个类的构造方法是public的，一个支持参数为LIst，另一个支持String。并且它的start方法能够执行命令，因此也可以通过ProcessBuilder执行命令。</p>
+<p><em>第一种方法：</em></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>);</span><br><span class="line">clazz.getMethod(<span class="string">&quot;start&quot;</span>).invoke(clazz.getConstructor(List.class).newInstance( Arrays.asList(<span class="string">&quot;calc.exe&quot;</span>)));</span><br></pre></td></tr></table></figure>
+
+<p><em>第二种方法：</em></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">Class</span> <span class="variable">clazz</span> <span class="operator">=</span> Class.forName(<span class="string">&quot;java.lang.ProcessBuilder&quot;</span>);     clazz.getMethod(<span class="string">&quot;start&quot;</span>).invoke(clazz.getConstructor(String[].class).newInstance(<span class="keyword">new</span> <span class="title class_">String</span>[][]&#123;&#123;<span class="string">&quot;calc.exe&quot;</span>&#125;&#125;));</span><br></pre></td></tr></table></figure>
+
 
                 
             </div>
@@ -468,7 +564,7 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                     </i>
                 </span>
                 <span class="reprint-info">
-                    <a href="http://www.squirt1e.top/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/">http://www.squirt1e.top/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/</a>
+                    <a href="http://www.squirt1e.top/2022/11/14/java-dai-ma-shen-ji-ji-chu-fan-she/">http://www.squirt1e.top/2022/11/14/java-dai-ma-shen-ji-ji-chu-fan-she/</a>
                 </span>
             </div>
             <div class="reprint__notice">
@@ -506,8 +602,8 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                     
                         <div class="article-tag">
                             
-                                <a href="/tags/MVC-Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">
-                                    <span class="chip bg-color">MVC,Java安全基础</span>
+                                <a href="/tags/fan-she-Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">
+                                    <span class="chip bg-color">fan&#39;she,Java安全基础</span>
                                 </a>
                             
                         </div>
@@ -586,9 +682,60 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
 <article id="prenext-posts" class="prev-next articles">
     <div class="row article-row">
         
-        <div class="article col s12 m6" data-aos="fade-up">
+        <div class="article col s12 m6" data-aos="fade-up" data-aos="fade-up">
             <div class="article-badge left-badge text-color">
-                <i class="fas fa-chevron-left"></i>&nbsp;上一篇</div>
+                <i class="far fa-dot-circle"></i>&nbsp;本篇
+            </div>
+            <div class="card">
+                <a href="/2022/11/14/java-dai-ma-shen-ji-ji-chu-fan-she/">
+                    <div class="card-image">
+                        
+                        
+                        <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="Java代码审计基础—反射">
+                        
+                        <span class="card-title">Java代码审计基础—反射</span>
+                    </div>
+                </a>
+                <div class="card-content article-content">
+                    <div class="summary block-with-text">
+                        
+                            
+                        
+                    </div>
+                    <div class="publish-info">
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-11-14
+                            </span>
+                        <span class="publish-author">
+                            
+                            <i class="fas fa-bookmark fa-fw icon-category"></i>
+                            
+                            <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
+                                    日常学习
+                                </a>
+                            
+                            
+                        </span>
+                    </div>
+                </div>
+
+                
+                <div class="card-action article-tags">
+                    
+                    <a href="/tags/fan-she-Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/">
+                        <span class="chip bg-color">fan&#39;she,Java安全基础</span>
+                    </a>
+                    
+                </div>
+                
+            </div>
+        </div>
+        
+        
+        <div class="article col s12 m6" data-aos="fade-up">
+            <div class="article-badge right-badge text-color">
+                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
+            </div>
             <div class="card">
                 <a href="/2022/11/14/huan-bo-ke-la/">
                     <div class="card-image">
@@ -606,9 +753,9 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                         
                     </div>
                     <div class="publish-info">
-                        <span class="publish-date">
-                            <i class="far fa-clock fa-fw icon-date"></i>2022-11-14
-                        </span>
+                            <span class="publish-date">
+                                <i class="far fa-clock fa-fw icon-date"></i>2022-11-14
+                            </span>
                         <span class="publish-author">
                             
                             <i class="fas fa-bookmark fa-fw icon-category"></i>
@@ -626,55 +773,6 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面">
                     
                     <a href="/tags/%E5%9B%BD%E5%86%85%E6%9C%8D%E5%8A%A1%E5%99%A8/">
                         <span class="chip bg-color">国内服务器</span>
-                    </a>
-                    
-                </div>
-                
-            </div>
-        </div>
-        
-        
-        <div class="article col s12 m6" data-aos="fade-up">
-            <div class="article-badge right-badge text-color">
-                下一篇&nbsp;<i class="fas fa-chevron-right"></i>
-            </div>
-            <div class="card">
-                <a href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/">
-                    <div class="card-image">
-                        
-                        
-                        <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker基础命令学习">
-                        
-                        <span class="card-title">docker基础命令学习</span>
-                    </div>
-                </a>
-                <div class="card-content article-content">
-                    <div class="summary block-with-text">
-                        
-                            
-                        
-                    </div>
-                    <div class="publish-info">
-                            <span class="publish-date">
-                                <i class="far fa-clock fa-fw icon-date"></i>2021-11-05
-                            </span>
-                        <span class="publish-author">
-                            
-                            <i class="fas fa-bookmark fa-fw icon-category"></i>
-                            
-                            <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
-                                    日常学习
-                                </a>
-                            
-                            
-                        </span>
-                    </div>
-                </div>
-                
-                <div class="card-action article-tags">
-                    
-                    <a href="/tags/docker/">
-                        <span class="chip bg-color">docker</span>
                     </a>
                     
                 </div>

@@ -29,6 +29,31 @@
     
     
     <entry>
+      <title>Java代码审计基础—架构</title>
+      <link href="/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/"/>
+      <url>/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/</url>
+      
+        <content type="html"><![CDATA[<h3 id="Java审计基础—架构"><a href="#Java审计基础—架构" class="headerlink" title="Java审计基础—架构"></a>Java审计基础—架构</h3><blockquote><p>架构的目的就是分层，使得职能分离。</p></blockquote><h4 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h4><ul><li>M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。</li><li>V 代表 视图（View）：负责页面展示。</li><li>C 代表 控制器（Controller) ：处理逻辑，控制页面跳转。</li></ul><p>这样的目的主要是把View和Model分离，改样式就动View层，Controller负责逻辑，也就是与V和M之间的联系。</p><h4 id="SpringMVC"><a href="#SpringMVC" class="headerlink" title="SpringMVC"></a>SpringMVC</h4><p>可以看到MVC分离的还不够细化，因此SpringMVC实现了把控制器分为控制层以及业务层（实际上咱现在用的基本都是SpringMVC以及SpringBoot这种）</p><p>SpringMVC：视图层调用控制层，控制层调用业务层，业务层调用数据访问层。</p><p><strong>数据访问层</strong>：data access object(DAO)，DAO就是封装实体类在数据库中增删改查的操作。</p><p><strong>业务层</strong>：用来写业务逻辑的<br>对于Service，就是 Servlet 和 Dao 层之间缓冲的层。通过这一层来进行解耦，使得 Dao 层内的变化不会直接影响到 Servlet 层。</p><p><strong>控制层</strong>：MVC中的Controller，用于处理前端页面跳转，调用业务层实现前端页面动态数据的展示。</p><p><strong>视图层</strong>：页面展示。</p><h4 id="JAVAEE分层模型"><a href="#JAVAEE分层模型" class="headerlink" title="JAVAEE分层模型"></a>JAVAEE分层模型</h4><p>就是SpringMVC，除此之外多了一个DO。<br><strong>Domain Object(领域对象)层</strong></p><p>DO是从现实世界中抽象出来的有形或无形的业务实体。</p><p>说白了像一个entity对应一张表叫DO。</p><p><strong>DAO(数据访问对象)层</strong><br>DAO实现了对数据库的CRUD等常见操作。</p><p><strong>Service(业务逻辑)层</strong><br>实现了系统所需要的业务逻辑方法。</p><p><strong>Controller(控制器)层</strong><br>本层由一系列控制器组成，这些控制器用于拦截用户的请求，并调用业务逻辑组件的业务逻辑方法去处理用户请求，然后根据处理结果向不同的View组件转发。</p><p><strong>View(表现层)层</strong><br>页面展示。</p><p>分层模型图如下：</p><p><img src="https://img-blog.csdnimg.cn/3a9d1d1175bf4645b35363b16a857e90.png#pic_center" alt="出自JAVA代码安全审计"></p><h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><p>1.Java代码安全审计（入门篇）                徐焱</p><p>2.<a href="https://blog.csdn.net/weixin_45442296/article/details/123111903">https://blog.csdn.net/weixin_45442296/article/details/123111903</a>      JavaRange</p><p>3.<a href="https://blog.csdn.net/qq_43391574/article/details/110944815">https://blog.csdn.net/qq_43391574/article/details/110944815</a>             落雨青石街</p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 日常学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> MVC Java安全基础 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>docker基础命令学习</title>
       <link href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/"/>
       <url>/2021/11/05/docker-ji-chu-ming-ling-xue-xi/</url>

@@ -485,38 +485,35 @@
             
             
             <div class="cd-timeline-img month" data-aos="zoom-in-up">
-                <a href="/archives/2021/11">11</a>
+                <a href="/archives/2021/12">12</a>
             </div>
             
 
             
             <div class="cd-timeline-img day" data-aos="zoom-in-up">
-                <span>20</span>
+                <span>25</span>
             </div>
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/11/20/java-shen-ji-ji-chu-lei-jia-zai/">
+                        <a href="/2021/12/25/cc-li-yong-lian-zong-jie/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/22.jpg" class="responsive-img" alt="Java代码审计基础—类加载">
+                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="CC利用链总结">
                                 
-                                <span class="card-title">Java代码审计基础—类加载</span>
+                                <span class="card-title">CC利用链总结</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    运行Java时，不会一次性的把class文件加载进内存，而是通过类加载机制进行动态加载，从而转换成java.lang.Class类的一个实例。
-JAVA四种修饰符的访问权限的，图出自鹏鹏哥哥的小红帽
-
-ClassLoader类Java提供了
+                                    CC1-CC7概述，并未涉及具体细节。
                                 
                             </div>
                             <div class="publish-info">
                                 <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-20
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-12-25
                                 </span>
                                 <span class="publish-author">
                                     
@@ -534,9 +531,11 @@ ClassLoader类Java提供了
                         
                         <div class="card-action article-tags">
                             
-                            <a href="/tags/Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/"><span class="chip bg-color">Java安全基础</span></a>
+                            <a href="/tags/gadget/"><span class="chip bg-color">gadget</span></a>
                             
-                            <a href="/tags/%E7%B1%BB%E5%8A%A0%E8%BD%BD/"><span class="chip bg-color">类加载</span></a>
+                            <a href="/tags/Java%E5%AE%89%E5%85%A8/"><span class="chip bg-color">Java安全</span></a>
+                            
+                            <a href="/tags/CC/"><span class="chip bg-color">CC</span></a>
                             
                         </div>
                         
@@ -555,32 +554,32 @@ ClassLoader类Java提供了
 
             
             <div class="cd-timeline-img day" data-aos="zoom-in-up">
-                <span>15</span>
+                <span>16</span>
             </div>
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/11/15/java-dai-ma-shen-ji-ji-chu-fan-she/">
+                        <a href="/2021/12/16/cc6-fen-xi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/3.jpg" class="responsive-img" alt="Java代码审计基础—反射">
+                                <img src="/medias/featureimages/16.jpg" class="responsive-img" alt="CC6分析">
                                 
-                                <span class="card-title">Java代码审计基础—反射</span>
+                                <span class="card-title">CC6分析</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
                                     
-反射是Java的一个重要特性，通过反射可以调用程序运行时任意类、对象的方法，也能访问或修改变量的值，并且能判断对象所属的类。
+在jdk8u71之前，CC1是能用的。在8u71之后，AnnotationInvocationHandler#readObject 逻辑发生改变，CC6正是一条支持jdk8高版本的gadget。
 
-实例化弄明白反射还是要稍微深入了解实例化的过程，下面有个样例，取自代码审计星球反射系列下ir0ny师傅的评论。
+gadget图跟着老哥整理了一下CC1两
                                 
                             </div>
                             <div class="publish-info">
                                 <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-15
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-12-16
                                 </span>
                                 <span class="publish-author">
                                     
@@ -598,9 +597,11 @@ ClassLoader类Java提供了
                         
                         <div class="card-action article-tags">
                             
-                            <a href="/tags/%E5%8F%8D%E5%B0%84/"><span class="chip bg-color">反射</span></a>
+                            <a href="/tags/gadget/"><span class="chip bg-color">gadget</span></a>
                             
-                            <a href="/tags/Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/"><span class="chip bg-color">Java安全基础</span></a>
+                            <a href="/tags/Java%E5%AE%89%E5%85%A8/"><span class="chip bg-color">Java安全</span></a>
+                            
+                            <a href="/tags/CC/"><span class="chip bg-color">CC</span></a>
                             
                         </div>
                         
@@ -619,35 +620,30 @@ ClassLoader类Java提供了
 
             
             <div class="cd-timeline-img day" data-aos="zoom-in-up">
-                <span>12</span>
+                <span>11</span>
             </div>
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/">
+                        <a href="/2021/12/11/cc1-lazymap/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/20.jpg" class="responsive-img" alt="Java代码审计基础—架构">
+                                <img src="/medias/featureimages/4.jpg" class="responsive-img" alt="CC1_LazyMap分析">
                                 
-                                <span class="card-title">Java代码审计基础—架构</span>
+                                <span class="card-title">CC1_LazyMap分析</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
                                     
-架构的目的就是分层，使得职能分离。
-
-MVC
-M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。
-V 代表 视图（View）：负责页面展示。
-C 代表 控制器（Controller) ：处理逻辑，控制页面
+上回讲到CC1中的TransformedMap#checksetValue调用ChainedTransformer#transform这条链子，这回学习LazyMap#get这条路。CC6也用到了LazyMap这条路，因此这条链子需要细品
                                 
                             </div>
                             <div class="publish-info">
                                 <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-12
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-12-11
                                 </span>
                                 <span class="publish-author">
                                     
@@ -665,9 +661,11 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面
                         
                         <div class="card-action article-tags">
                             
-                            <a href="/tags/Java%E5%AE%89%E5%85%A8%E5%9F%BA%E7%A1%80/"><span class="chip bg-color">Java安全基础</span></a>
+                            <a href="/tags/gadget/"><span class="chip bg-color">gadget</span></a>
                             
-                            <a href="/tags/MVC/"><span class="chip bg-color">MVC</span></a>
+                            <a href="/tags/Java%E5%AE%89%E5%85%A8/"><span class="chip bg-color">Java安全</span></a>
+                            
+                            <a href="/tags/CC/"><span class="chip bg-color">CC</span></a>
                             
                         </div>
                         
@@ -691,29 +689,26 @@ C 代表 控制器（Controller) ：处理逻辑，控制页面
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/">
+                        <a href="/2021/12/05/cc1-li-yong-lian-fen-xi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/23.jpg" class="responsive-img" alt="docker基础命令学习">
+                                <img src="/medias/featureimages/8.jpg" class="responsive-img" alt="CC1利用链分析">
                                 
-                                <span class="card-title">docker基础命令学习</span>
+                                <span class="card-title">CC1利用链分析</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    搜索镜像docker search xxx
-docker search --filter=STARS=1000       #过滤，指定搜索stars大于1000的镜像
-
-search指令可以搜索指定名称或者仓库的镜像的信息。
-
-STARS
+                                    前言CC1很重要，需要去深挖。
+分析漏洞点在于InvokerTransformer类的transform方法。可以调用该函数，以反射的形式调用任意方法，造成RCE。其中input是传进来的object。
+    public Object 
                                 
                             </div>
                             <div class="publish-info">
                                 <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-05
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-12-05
                                 </span>
                                 <span class="publish-author">
                                     
@@ -731,7 +726,11 @@ STARS
                         
                         <div class="card-action article-tags">
                             
-                            <a href="/tags/docker/"><span class="chip bg-color">docker</span></a>
+                            <a href="/tags/gadget/"><span class="chip bg-color">gadget</span></a>
+                            
+                            <a href="/tags/Java%E5%AE%89%E5%85%A8/"><span class="chip bg-color">Java安全</span></a>
+                            
+                            <a href="/tags/CC/"><span class="chip bg-color">CC</span></a>
                             
                         </div>
                         
@@ -749,43 +748,45 @@ STARS
             
             
             <div class="cd-timeline-img month" data-aos="zoom-in-up">
-                <a href="/archives/2021/10">10</a>
+                <a href="/archives/2021/11">11</a>
             </div>
             
 
             
             <div class="cd-timeline-img day" data-aos="zoom-in-up">
-                <span>31</span>
+                <span>30</span>
             </div>
             <article class="cd-timeline-content" data-aos="fade-up">
                 <div class="article col s12 m6">
                     <div class="card">
-                        <a href="/2021/10/31/zi-wo-jie-shao/">
+                        <a href="/2021/11/30/urldns-lian-fen-xi/">
                             <div class="card-image">
                                 
                                 
-                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="自我介绍">
+                                <img src="/medias/featureimages/1.jpg" class="responsive-img" alt="URLDNS利用链分析">
                                 
-                                <span class="card-title">自我介绍</span>
+                                <span class="card-title">URLDNS利用链分析</span>
                             </div>
                         </a>
                         <div class="card-content article-content">
                             <div class="summary block-with-text">
                                 
-                                    我是Squirt1e，坐标北京，是一名即将步入研究生阶段的web🐕。
-我的梦想是成为安全研究员，并且做出一些有用的工作，但这个梦想可能难以实现。一个原因是研究生阶段的方向可能与web安全研究出入比较大，我早就知道研究生不太可能做“传统”网
+                                    前言第一个gadget chain分析，因为zhege比较简单。
+触发反序列化的条件
+类要继承Serializable：java的序列化以及反序列化一定要继承Serializable。
+找到入口类（重写readObject，调用常见的函数，
                                 
                             </div>
                             <div class="publish-info">
                                 <span class="publish-date">
-                                    <i class="far fa-clock fa-fw icon-date"></i>2021-10-31
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-30
                                 </span>
                                 <span class="publish-author">
                                     
                                     <i class="fas fa-bookmark fa-fw icon-category"></i>
                                     
-                                    <a href="/categories/%E9%97%B2%E8%81%8A/" class="post-category">
-                                    闲聊
+                                    <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
+                                    日常学习
                                     </a>
                                     
                                     
@@ -796,7 +797,96 @@ STARS
                         
                         <div class="card-action article-tags">
                             
-                            <a href="/tags/%E5%85%B3%E4%BA%8ESquirt1e/"><span class="chip bg-color">关于Squirt1e</span></a>
+                            <a href="/tags/gadget/"><span class="chip bg-color">gadget</span></a>
+                            
+                            <a href="/tags/Java%E5%AE%89%E5%85%A8/"><span class="chip bg-color">Java安全</span></a>
+                            
+                        </div>
+                        
+                    </div>
+                </div>
+            </article>
+        </div>
+        
+        <div class="cd-timeline-block">
+
+            
+            
+
+            
+            
+
+            
+            <div class="cd-timeline-img day" data-aos="zoom-in-up">
+                <span>25</span>
+            </div>
+            <article class="cd-timeline-content" data-aos="fade-up">
+                <div class="article col s12 m6">
+                    <div class="card">
+                        <a href="/2021/11/25/trick-xxe/">
+                            <div class="card-image">
+                                
+                                
+                                <img src="/medias/featureimages/14.jpg" class="responsive-img" alt="Trick总结——XXE">
+                                
+                                <span class="card-title">Trick总结——XXE</span>
+                            </div>
+                        </a>
+                        <div class="card-content article-content">
+                            <div class="summary block-with-text">
+                                
+                                    有回显，读文件：
+
+
+&xxe;
+
+
+无回显，外带：服务端
+
+
+有些时候读不出来，需要编码。
+
+
+
+exp
+
+DOS
+     
+     &lol9;
+
+RCEphp需要安装expect拓展。
+ 
+
+
+&xxe;
+
+
+探测内网&lt;?x
+                                
+                            </div>
+                            <div class="publish-info">
+                                <span class="publish-date">
+                                    <i class="far fa-clock fa-fw icon-date"></i>2021-11-25
+                                </span>
+                                <span class="publish-author">
+                                    
+                                    <i class="fas fa-bookmark fa-fw icon-category"></i>
+                                    
+                                    <a href="/categories/%E6%97%A5%E5%B8%B8%E5%AD%A6%E4%B9%A0/" class="post-category">
+                                    日常学习
+                                    </a>
+                                    
+                                    
+                                </span>
+                            </div>
+                        </div>
+
+                        
+                        <div class="card-action article-tags">
+                            
+                            <a href="/tags/Trick/"><span class="chip bg-color">Trick</span></a>
+                            
+                            <a href="/tags/XXE/"><span class="chip bg-color">XXE</span></a>
                             
                         </div>
                         
@@ -821,11 +911,12 @@ STARS
             
         </div>
         <div class="page-info col m4 l4 hide-on-small-only">
-            <div class="center-align b-text-gray">2 / 2</div>
+            <div class="center-align b-text-gray">2 / 3</div>
         </div>
         <div class="col s6 m4 l4">
             
-            <a class="right btn-floating btn-large disabled">
+            <a href="/archives/page/3/"
+               class="right btn-floating btn-large waves-effect waves-light bg-color">
                 <i class="fas fa-angle-right"></i>
             </a>
             

@@ -390,7 +390,7 @@ Magic method
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    796
+                    797
                 </div>
                 
 
@@ -435,14 +435,14 @@ Magic method
 </ul>
 <h4 id="Primitive-class"><a href="#Primitive-class" class="headerlink" title="Primitive class"></a>Primitive class</h4><p><strong>读文件名：</strong></p>
 <pre class="line-numbers language-php"><code class="language-php"><span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">GlobIterator</span><span class="token punctuation">(</span><span class="token string">'/f*'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">DirectoryIterator</span><span class="token punctuation">(</span>'glob<span class="token punctuation">:</span><span class="token comment" spellcheck="true">///f*);</span>
+<span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">DirectoryIterator</span><span class="token punctuation">(</span>'glob<span class="token punctuation">:</span><span class="token comment" spellcheck="true">///f*');</span>
 <span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">FilesystemIterator</span><span class="token punctuation">(</span>'glob<span class="token punctuation">:</span><span class="token comment" spellcheck="true">///f*');</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
 <p><strong>读文件：</strong></p>
 <pre class="line-numbers language-php"><code class="language-php"><span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">SplFileObject</span><span class="token punctuation">(</span><span class="token string">'/flag'</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <h4 id="phar"><a href="#phar" class="headerlink" title="phar"></a>phar</h4><blockquote>
-<p>无unserialize()时没准可以通过phar进行反序列化，</p>
+<p>没有unserialize()时或许可以通过phar进行反序列化。</p>
 </blockquote>
 <p><strong>触发phar的函数：</strong></p>
 <table>
@@ -537,7 +537,7 @@ Magic method
 <span class="token variable">$b</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">a</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>CRLF就是<code>\r\n</code>在HTTP报文中当换行用。user-agent注入Cookie成功。</p>
-<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676533896472.png" alt="1676533896472" style="zoom:80%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676533896472.png" style="zoom:80%;" />
 
 <h5 id="CRLF注入任意POST数据"><a href="#CRLF注入任意POST数据" class="headerlink" title="CRLF注入任意POST数据"></a>CRLF注入任意POST数据</h5><p>Content-Type不是可控的，但可以通过User-Agent伪造ContentType实现任意POST请求。</p>
 <p>注：Content-Length也需要注入。</p>
@@ -569,9 +569,9 @@ Magic method
 <span class="token function">session_start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>对于php_serialize构造器，序列化数据前面要加个’|’。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535834714.png" alt="1676535834714"></p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535834714.png"></p>
 <p>然后使用php构造器就能反序列化了，因为php构造器分割键为’|’。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535938182.png" alt="1676535938182"></p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535938182.png"></p>
 
                 
             </div>

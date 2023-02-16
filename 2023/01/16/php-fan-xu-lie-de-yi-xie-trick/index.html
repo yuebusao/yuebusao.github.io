@@ -390,7 +390,7 @@ Magic method
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    797
+                    805
                 </div>
                 
 
@@ -567,7 +567,10 @@ Magic method
 <p>像这种就可控。</p>
 <pre class="line-numbers language-php"><code class="language-php"><span class="token function">ini_set</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'baby'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'d0g3'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token function">session_start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+————————————————————————————————————————————————————————
+<span class="token function">call_user_func</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">,</span><span class="token variable">$_POST</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">//$a=session_start  POST: serialize_handler=pphp_serialize</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>对于php_serialize构造器，序列化数据前面要加个’|’。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535834714.png"></p>
 <p>然后使用php构造器就能反序列化了，因为php构造器分割键为’|’。</p>

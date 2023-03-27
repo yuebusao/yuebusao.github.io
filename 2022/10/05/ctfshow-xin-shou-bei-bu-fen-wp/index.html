@@ -380,14 +380,14 @@
                 
                 <div class="info-break-policy">
                     <i class="far fa-file-word fa-fw"></i>文章字数:&nbsp;&nbsp;
-                    1.1k
+                    1.4k
                 </div>
                 
 
                 
                 <div class="info-break-policy">
                     <i class="far fa-clock fa-fw"></i>阅读时长:&nbsp;&nbsp;
-                    5 分
+                    7 分
                 </div>
                 
 
@@ -429,84 +429,78 @@
 <span class="token function">system</span><span class="token punctuation">(</span><span class="token string">'cat /f1agaaa'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token operator">&lt;</span><span class="token operator">/</span>script<span class="token operator">></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005221523758.png" alt="image-20221005221523758"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005221523758.png" alt="image-20221005221523758" style="zoom:50%;" />
+
 <h4 id="剪刀石头布"><a href="#剪刀石头布" class="headerlink" title="剪刀石头布"></a>剪刀石头布</h4><p>连续猜拳赢100次得到flag（耍你的</p>
 <p>审计代码：</p>
-<pre class="line-numbers language-php+HTML"><code class="language-php+HTML"><?php
-    ini_set('session.serialize_handler', 'php');
-    if(isset($_POST['source'])){
-        highlight_file(__FILE__);
-    phpinfo();
-    die();
-    }
-    error_reporting(0);
-    include "flag.php";
-    class Game{
-        public $log,$name,$play;
+<pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
+    <span class="token function">ini_set</span><span class="token punctuation">(</span><span class="token string">'session.serialize_handler'</span><span class="token punctuation">,</span> <span class="token string">'php'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">isset</span><span class="token punctuation">(</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">'source'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token function">highlight_file</span><span class="token punctuation">(</span><span class="token constant">__FILE__</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token function">phpinfo</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">die</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token function">error_reporting</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">include</span> <span class="token string">"flag.php"</span><span class="token punctuation">;</span>
+    <span class="token keyword">class</span> <span class="token class-name">Game</span><span class="token punctuation">{</span>
+        <span class="token keyword">public</span> <span class="token variable">$log</span><span class="token punctuation">,</span><span class="token variable">$name</span><span class="token punctuation">,</span><span class="token variable">$play</span><span class="token punctuation">;</span>
 
-        public function __construct($name){
-            $this->name = $name;
-            $this->log = '/tmp/'.md5($name).'.log';
-        }
-        //略
+        <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">__construct</span><span class="token punctuation">(</span><span class="token variable">$name</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">name</span> <span class="token operator">=</span> <span class="token variable">$name</span><span class="token punctuation">;</span>
+            <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">log</span> <span class="token operator">=</span> <span class="token string">'/tmp/'</span><span class="token punctuation">.</span><span class="token function">md5</span><span class="token punctuation">(</span><span class="token variable">$name</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token string">'.log'</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+        <span class="token comment" spellcheck="true">//略</span>
 
-        public function __destruct(){
-                echo "<h5>Game History</h5>\n";
-        echo "<div class='all_output'>\n";
-                echo file_get_contents($this->log);
-        echo "</div>";
-        }
-    }
+        <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">__destruct</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+                <span class="token keyword">echo</span> <span class="token string">"&lt;h5>Game History&lt;/h5>\n"</span><span class="token punctuation">;</span>
+        <span class="token keyword">echo</span> <span class="token string">"&lt;div class='all_output'>\n"</span><span class="token punctuation">;</span>
+                <span class="token keyword">echo</span> <span class="token function">file_get_contents</span><span class="token punctuation">(</span><span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">log</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">echo</span> <span class="token string">"&lt;/div>"</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
 
-?>
-<?php
-    session_start();
-    if(isset($_POST['name'])){
-        $_SESSION['name']=$_POST['name'];
-        $_SESSION['win']=0;
-    }
-    if(!isset($_SESSION['name'])){
-        ?>
-...
-<?php exit();
-    }
+<span class="token delimiter">?></span>
+<span class="token delimiter">&lt;?php</span>
+    <span class="token function">session_start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">isset</span><span class="token punctuation">(</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">'name'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'name'</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">'name'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'win'</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token operator">!</span><span class="token function">isset</span><span class="token punctuation">(</span><span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'name'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token delimiter">?></span>
+<span class="token punctuation">.</span><span class="token punctuation">.</span><span class="token punctuation">.</span>
+<span class="token delimiter">&lt;?php</span> <span class="token function">exit</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
 
-?>
-<?php
-echo "<h5>Welecome ".$_SESSION['name'].", now you win ".$_SESSION['win']." rounds.</h5>";
-$Game=new Game($_SESSION['name']);
-?>
-    <?php
-    $choices = array("Rock", "Paper", "Scissors");
-    $rand_bot = array_rand($choices);
-    $bot_input = $choices[$rand_bot];
-    if(isset($_POST["choice"]) AND in_array($_POST["choice"],$choices)){
-        $user_input = $_POST["choice"];
-        $result=$Game->play($user_input,$bot_input);
-        if ($result=="You Win"){
-            $_SESSION['win']+=1;
-        } else {
-            $_SESSION['win']=0;
-        }
-    } else {
-        ?>
-        <form method="post">
-        <button class="flag" value="flag" name="flag">get flag</button>
-        <button class="source" value="source" name="source">show source</button>
-        </form>
-        <?php
-        if(isset($_POST["flag"])){
-            if($_SESSION['win']<100){
-                echo "<div>You need to win 100 rounds in a row to get flag.</div>";
-            } else {
-                echo "Here is your flag:".$flag;
-            }
+<span class="token delimiter">?></span>
+    <span class="token delimiter">&lt;?php</span>
+    <span class="token variable">$choices</span> <span class="token operator">=</span> <span class="token keyword">array</span><span class="token punctuation">(</span><span class="token string">"Rock"</span><span class="token punctuation">,</span> <span class="token string">"Paper"</span><span class="token punctuation">,</span> <span class="token string">"Scissors"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token variable">$rand_bot</span> <span class="token operator">=</span> <span class="token function">array_rand</span><span class="token punctuation">(</span><span class="token variable">$choices</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token variable">$bot_input</span> <span class="token operator">=</span> <span class="token variable">$choices</span><span class="token punctuation">[</span><span class="token variable">$rand_bot</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">isset</span><span class="token punctuation">(</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">"choice"</span><span class="token punctuation">]</span><span class="token punctuation">)</span> <span class="token keyword">AND</span> <span class="token function">in_array</span><span class="token punctuation">(</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">"choice"</span><span class="token punctuation">]</span><span class="token punctuation">,</span><span class="token variable">$choices</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+        <span class="token variable">$user_input</span> <span class="token operator">=</span> <span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">"choice"</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+        <span class="token variable">$result</span><span class="token operator">=</span><span class="token variable">$Game</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">play</span><span class="token punctuation">(</span><span class="token variable">$user_input</span><span class="token punctuation">,</span><span class="token variable">$bot_input</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token variable">$result</span><span class="token operator">==</span><span class="token string">"You Win"</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            <span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'win'</span><span class="token punctuation">]</span><span class="token operator">+</span><span class="token operator">=</span><span class="token number">1</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            <span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'win'</span><span class="token punctuation">]</span><span class="token operator">=</span><span class="token number">0</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+        <span class="token delimiter">?></span>
+        <span class="token comment" spellcheck="true">//...</span>
+        <span class="token delimiter">&lt;?php</span>
+        <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token function">isset</span><span class="token punctuation">(</span><span class="token variable">$_POST</span><span class="token punctuation">[</span><span class="token string">"flag"</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+            <span class="token keyword">if</span><span class="token punctuation">(</span><span class="token variable">$_SESSION</span><span class="token punctuation">[</span><span class="token string">'win'</span><span class="token punctuation">]</span><span class="token operator">&lt;</span><span class="token number">100</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+                <span class="token keyword">echo</span> <span class="token string">"&lt;div>You need to win 100 rounds in a row to get flag.&lt;/div>"</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+                <span class="token keyword">echo</span> <span class="token string">"Here is your flag:"</span><span class="token punctuation">.</span><span class="token variable">$flag</span><span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
 
-        }
-    }
-    ?>
-<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>html部分省略了，这里有一个很刻意的指出了ini_set(‘session.serialize_handler’, ‘php’);，并且发现<strong>session.upload_progress.name</strong>为PHP_SESSION_UPLOAD_PROGRESS，很明显的phpsession反序列化。</p>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+    <span class="token delimiter">?></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里有一个很刻意的指出了ini_set(‘session.serialize_handler’, ‘php’);序列化handler可控，并且发现<strong>session.upload_progress.name</strong>为PHP_SESSION_UPLOAD_PROGRESS，很明显的phpsession差异导致的反序列化。</p>
 <p>php中的session中的内容并不是放在内存中的，而是以文件的方式来存储的，存储方式就是由配置项<code>session.save_handler</code>来进行确定的，默认是以文件的方式存储。</p>
 <p>如果在PHP在反序列化存储的$_SESSION数据时使用的引擎和序列化使用的引擎不一样，会导致安全问题。</p>
 <p>这是因为当使用php引擎的时候，php引擎会以**|**作为key和value的分隔符。</p>
@@ -554,7 +548,7 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
         <span class="token keyword">return</span> <span class="token string">"error"</span>
     <span class="token keyword">with</span> open<span class="token punctuation">(</span>str<span class="token punctuation">(</span>name<span class="token punctuation">)</span><span class="token operator">+</span><span class="token string">"_info"</span><span class="token punctuation">,</span> <span class="token string">"rb"</span><span class="token punctuation">)</span> <span class="token keyword">as</span> file<span class="token punctuation">:</span>
         user <span class="token operator">=</span> pickle<span class="token punctuation">.</span>load<span class="token punctuation">(</span>file<span class="token punctuation">)</span>
-    message <span class="token operator">=</span> <span class="token string">"&lt;h1>欢迎来到新手村"</span> <span class="token operator">+</span> user<span class="token punctuation">.</span>name <span class="token operator">+</span> <span class="token string">"&lt;/h1>\n&lt;p>"</span> <span class="token operator">+</span> <span class="token string">"只有成为大菜鸡才能得到flag"</span> <span class="token operator">+</span> <span class="token string">"&lt;/p>"</span>
+    message <span class="token operator">=</span> user<span class="token punctuation">.</span>name <span class="token operator">+</span> <span class="token string">"&lt;/h1>\n&lt;p>"</span> <span class="token operator">+</span> <span class="token string">"只有成为大菜鸡才能得到flag"</span>
     <span class="token keyword">return</span> message
 @app<span class="token punctuation">.</span>route<span class="token punctuation">(</span><span class="token string">"/dacaiji"</span><span class="token punctuation">)</span>
 <span class="token keyword">def</span> <span class="token function">get_flag</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
@@ -563,10 +557,10 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
         user <span class="token operator">=</span> pickle<span class="token punctuation">.</span>load<span class="token punctuation">(</span>f<span class="token punctuation">)</span>
 
     <span class="token keyword">if</span> user<span class="token punctuation">.</span>id <span class="token operator">!=</span> <span class="token number">0</span><span class="token punctuation">:</span>
-        message <span class="token operator">=</span> <span class="token string">"&lt;h1>你不是大菜鸡&lt;/h1>"</span>
+        message <span class="token operator">=</span> <span class="token string">"你不是大菜鸡"</span>
         <span class="token keyword">return</span> message
     <span class="token keyword">else</span><span class="token punctuation">:</span>
-        message <span class="token operator">=</span> <span class="token string">"&lt;h1>恭喜你成为大菜鸡&lt;/h1>\n&lt;p>"</span> <span class="token operator">+</span> flag <span class="token operator">+</span> <span class="token string">"&lt;/p>"</span>
+        message <span class="token operator">=</span> <span class="token string">"恭喜你成为大菜鸡"</span> <span class="token operator">+</span> flag
         <span class="token keyword">return</span> message
 @app<span class="token punctuation">.</span>route<span class="token punctuation">(</span><span class="token string">"/change"</span><span class="token punctuation">)</span>
 <span class="token keyword">def</span> <span class="token function">change_name</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
@@ -592,11 +586,14 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>非预期了。pickle反序列化。然后注意到了info &#x3D; info.replace(name, newname)，只要让user.id&#x3D;0即可，假设第一次默认路由让id&#x3D;1，那么注册一个name&#x3D;2的用户，然后通过&#x2F;change改成0即可替换掉user.id。</p>
 <p>注册用户2。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225054520.png" alt="image-20221005225054520"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225054520.png" alt="image-20221005225054520" style="zoom:50%;" />
+
 <p>修改用户名，注意base编码。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225158916.png" alt="image-20221005225158916"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225158916.png" alt="image-20221005225158916" style="zoom:50%;" />
+
 <p>访问&#x2F;dacaiji，这里没想明白为啥name没被替换成0。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225223114.png" alt="image-20221005225223114"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225223114.png" alt="image-20221005225223114" style="zoom:50%;" />
+
 <h4 id="repairman"><a href="#repairman" class="headerlink" title="repairman"></a>repairman</h4><p>hello,the user!We may change the mode to repaie the server,please keep it unchanged</p>
 <p>让mode&#x3D;0，看到了代码。</p>
 <pre class="line-numbers language-php"><code class="language-php">Your mode is the guest<span class="token operator">!</span>hello<span class="token punctuation">,</span>the repairman<span class="token operator">!</span> <span class="token delimiter">&lt;?php</span>
@@ -643,7 +640,7 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
                 <span class="token function">highlight_file</span><span class="token punctuation">(</span><span class="token constant">__FILE__</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
         <span class="token punctuation">}</span>
     <span class="token punctuation">}</span><span class="token keyword">elseif</span><span class="token punctuation">(</span><span class="token variable">$mode</span> <span class="token operator">==</span> <span class="token string">'1'</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
-        <span class="token keyword">echo</span> <span class="token string">'&lt;/br>hello,the user!We may change the mode to repaie the server,please keep it unchanged'</span><span class="token punctuation">;</span>
+        <span class="token keyword">echo</span> <span class="token string">'hello,the user!We may change the mode to repaie the server,please keep it unchanged'</span><span class="token punctuation">;</span>
     <span class="token punctuation">}</span><span class="token keyword">else</span><span class="token punctuation">{</span>
         <span class="token function">header</span><span class="token punctuation">(</span><span class="token string">'refresh:5;url=index.php?mode=1'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
         exit<span class="token punctuation">;</span>
@@ -1376,7 +1373,7 @@ decode<span class="token punctuation">(</span><span class="token punctuation">)<
             <br>
             
                 &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                        class="white-color">18.6k</span>
+                        class="white-color">19k</span>
             
             
             

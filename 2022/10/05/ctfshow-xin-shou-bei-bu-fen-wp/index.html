@@ -524,7 +524,8 @@ $Game=new Game($_SESSION['name']);
 <p>O:4:&quot;Game&quot;:2:{s:3:&quot;log&quot;;s:8:&quot;flag.php&quot;;s:4:&quot;name&quot;;s:8:&quot;Squirt1e&quot;;}</p>
 <p>filename赋值为|O:4:&quot;Game&quot;:2:{s:3:&quot;log&quot;;s:8:&quot;flag.php&quot;;s:4:&quot;name&quot;;s:8:&quot;Squirt1e&quot;;}。、php引擎会以**|**作为key和value的分隔符</p>
 <p>也就是’s:6:&quot;Squirt1e”;s:67:”‘&#x3D;&gt;’O:4:&quot;Game&quot;:2:{s:3:&quot;log&quot;;s:8:&quot;flag.php&quot;;s:4:&quot;name&quot;;s:8:&quot;Squirt1e&quot;;}’，从而在析构函数读取flag。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005224014534.png" alt="image-20221005224014534"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005224014534.png" alt="image-20221005224014534" style="zoom: 33%;" />
+
 <h4 id="baby-pickle"><a href="#baby-pickle" class="headerlink" title="baby_pickle"></a>baby_pickle</h4><pre class="line-numbers language-python"><code class="language-python">app <span class="token operator">=</span> Flask<span class="token punctuation">(</span>__name__<span class="token punctuation">)</span>
 id <span class="token operator">=</span> <span class="token number">0</span>
 flag <span class="token operator">=</span> <span class="token string">"ctfshow{"</span> <span class="token operator">+</span> str<span class="token punctuation">(</span>uuid<span class="token punctuation">.</span>uuid4<span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">"}"</span>
@@ -589,7 +590,7 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
 <span class="token keyword">if</span> __name__ <span class="token operator">==</span> <span class="token string">'__main__'</span><span class="token punctuation">:</span>
     app<span class="token punctuation">.</span>run<span class="token punctuation">(</span>host<span class="token operator">=</span><span class="token string">'0.0.0.0'</span><span class="token punctuation">,</span> port<span class="token operator">=</span><span class="token number">8888</span><span class="token punctuation">)</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>开始以为是pickle反序列化的东西，然后注意到了info &#x3D; info.replace(name, newname)，只要让user.id&#x3D;0即可，假设第一次默认路由让id&#x3D;1，那么注册一个name&#x3D;2的用户，然后通过&#x2F;change改成0即可替换掉user.id。</p>
+<p>非预期了。pickle反序列化。然后注意到了info &#x3D; info.replace(name, newname)，只要让user.id&#x3D;0即可，假设第一次默认路由让id&#x3D;1，那么注册一个name&#x3D;2的用户，然后通过&#x2F;change改成0即可替换掉user.id。</p>
 <p>注册用户2。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225054520.png" alt="image-20221005225054520"></p>
 <p>修改用户名，注意base编码。</p>
@@ -653,7 +654,7 @@ flag <span class="token operator">=</span> <span class="token string">"ctfshow{"
 <pre class="line-numbers language-php"><code class="language-php"><span class="token variable">$url</span> <span class="token operator">=</span> <span class="token function">parse_url</span><span class="token punctuation">(</span><span class="token variable">$_SERVER</span><span class="token punctuation">[</span><span class="token string">'REQUEST_URI'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token function">parse_str</span><span class="token punctuation">(</span><span class="token variable">$url</span><span class="token punctuation">[</span><span class="token string">'query'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
-<p>exec无回显，这时候写文件即可，flag藏在config.php中。</p>
+<p>exec无回显，写文件即可，flag藏在config.php中。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20221005225937220.png" alt="image-20221005225937220"></p>
 <p>访问a.txt</p>
 <pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
@@ -1375,7 +1376,7 @@ decode<span class="token punctuation">(</span><span class="token punctuation">)<
             <br>
             
                 &nbsp;<i class="fas fa-chart-area"></i>&nbsp;站点总字数:&nbsp;<span
-                        class="white-color">17.2k</span>
+                        class="white-color">18.6k</span>
             
             
             

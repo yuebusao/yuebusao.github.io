@@ -1,0 +1,108 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="Squirt1e"><meta name="renderer" content="webkit"><meta name="copyright" content="Squirt1e"><meta name="keywords" content="Squirt1e's blog"><meta name="description" content="一名网络安全从业人员的博客"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>挖掘某cms漏洞总结 · Squirt1e's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="https://nese.team/" target="_black">NESE</a></span><span><a href="https://blog.z3ratu1.top/" target="_black">Z3ratu1</a></span><span><a href="https://harmless.blue/" target="_black">CrumbledWall</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">挖掘某cms漏洞总结</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-09-20</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="挖洞"> 挖洞</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">852</span> | Reading time: <span class="post-count">2</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><h4 id="无题"><a href="#无题" class="headerlink" title="无题"></a>无题</h4><p>不出意外的话应该是第一个<code>CVE</code>吧，虽然<code>cve</code>官方还没有回信但大概是稳了8，毕竟可以<code>RCE</code>。虽然漏洞点显而易见，但从某较为少见的注入类型到远程命令执行的利用过程自我感觉还是有点技术含量的。也算没白打两年<code>CTF</code>，因为现在站在上帝视角看自己写的漏洞报告有一种看<code>writeup</code>的感觉。</p>
+<p>那么先贷款一个<code>CVE</code>来聊聊，为什么作为一个网络安全专业研二的学生到现在为止只有一个<code>CVE</code>，主要原因技术菜暂且不谈。想了一会得到的答案就是我过于眼高手低了，到现在为止也看了不少<code>cms 0day</code>的分析报告，感觉有技术含量的利用也不多），又的是找到一个究极明显的<code>sink</code>点，再找一下<code>usage</code>发现路由直接能触发，比较经典的就是<code>sql</code>注入，命令注入等等。再比如鉴权出现问题，有的没<code>token</code>，有的<code>filter</code>的逻辑写的有问题，还有的硬编码，较为经典的是<code>CSRF</code>，提权，访问不该权限高的路由。再比如找个反序列化链子，不过大都没有可控的<code>readObject</code>可以利用，不过在有些时候也能算洞。还有的<code>XSS</code>也能提，这个就太多了。这些东西在一些小的<code>cms</code>真的是比较常见并且容易发现的，但是我<code>tm</code>看不上这些（觉得丢人</p>
+<p>当然以上提到的洞也许面试的时候也起不了什么大作用，但问题是我一个<code>CVE</code>也没有啊！！！明明一无所有却看不上这些洞，明年就找工作了，没点漏洞挖掘经历，安全开发经历肯定去不了想去的地方。还有一个问题是缺乏交流，我感觉我现在还没彻底融入安全圈，人家师傅都好多朋友可以交流，我一直觉得（尤其对于安全专业来说）交流的提升是非常大的，但是没有人和我交流:)而且朋友在某种程度上意味着资源，没资源就会失去很多机会。还有一个原因是我懒得动手，他妈的<code>debug</code>自己分析真的好累，分析半天得到一个现在看上去十分答辩的漏洞，复现都懒得复现，看一眼大概明白了就飘过去了。</p>
+<h4 id="WHY"><a href="#WHY" class="headerlink" title="WHY"></a>WHY</h4><p>好歹也是有一年开发经验的人了，从开发的角度（对不起，现在的我没办法做到同时具备安全和开发思维，只能来回切）上看这个洞简直离了大普，为什么要这么写？难不成这就是开发的<code>elegant</code>？比如在一个路由走程序处理流程的场景下，先把值处理一下然后序列化成字符串，然后下一个函数再反序列化出来取值，为啥要这样呢，我一直以为这么愚蠢的场景只能在<code>ctf</code>里出现。</p>
+<p>还有，为什么我提完漏洞第二天我发现之前看到的用这个<code>cms</code>的资产崩了？</p>
+<h4 id="thanks"><a href="#thanks" class="headerlink" title="thanks"></a>thanks</h4><p>感谢师兄<code>vegeta</code>，总之没有他的鼓励我肯定不会挖<code>day</code>的。</p>
+<p>读研生活不易，继续努力。</p>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://www.squirt1e.top">Squirt1e</a></p><p> <span>Link:  </span><a href="http://www.squirt1e.top/2023/09/20/wa-jue-mou-cms-qian-tai-rce-zong-jie/">http://www.squirt1e.top/2023/09/20/wa-jue-mou-cms-qian-tai-rce-zong-jie/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license noopener" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="nextSlogan" href="/2023/06/13/fastjson-jie-he-er-ci-fan-xu-lie-hua-rao-guo-hei-ming-dan/" title="Fastjson结合二次反序列化绕过黑名单"><span>NextPost ></span><br><span class="nextTitle">Fastjson结合二次反序列化绕过黑名单</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%A0%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">无题</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#WHY"><span class="toc-number">2.</span> <span class="toc-text">WHY</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#thanks"><span class="toc-number">3.</span> <span class="toc-text">thanks</span></a></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

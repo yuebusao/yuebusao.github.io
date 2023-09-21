@@ -1,0 +1,128 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="Squirt1e"><meta name="renderer" content="webkit"><meta name="copyright" content="Squirt1e"><meta name="keywords" content="Squirt1e's blog"><meta name="description" content="一名网络安全从业人员的博客"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>Java代码审计基础—架构 · Squirt1e's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="http://114.67.236.137/pic/5634a4a770a0497be3f36bdc068c6f7.jpg" target="_black">美</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">Java代码审计基础—架构</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2021-11-12</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="Java安全基础"> Java安全基础</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="MVC"> MVC</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">535</span> | Reading time: <span class="post-count">1</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><blockquote>
+<p>架构的目的就是分层，使得职能分离。</p>
+</blockquote>
+<h4 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h4><ul>
+<li>M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。</li>
+<li>V 代表 视图（View）：负责页面展示。</li>
+<li>C 代表 控制器（Controller) ：处理逻辑，控制页面跳转。</li>
+</ul>
+<p>这样的目的主要是把View和Model分离，改样式就动View层，Controller负责逻辑，也就是与V和M之间的联系。</p>
+<h4 id="SpringMVC"><a href="#SpringMVC" class="headerlink" title="SpringMVC"></a>SpringMVC</h4><p>可以看到MVC分离的还不够细化，因此SpringMVC实现了把控制器分为控制层以及业务层（实际上咱现在用的基本都是SpringMVC以及SpringBoot这种）</p>
+<p>SpringMVC：视图层调用控制层，控制层调用业务层，业务层调用数据访问层。</p>
+<p><strong>数据访问层</strong>：data access object(DAO)，DAO就是封装实体类在数据库中增删改查的操作。</p>
+<p><strong>业务层</strong>：用来写业务逻辑的<br>对于Service，就是 Servlet 和 Dao 层之间缓冲的层。通过这一层来进行解耦，使得 Dao 层内的变化不会直接影响到 Servlet 层。</p>
+<p><strong>控制层</strong>：MVC中的Controller，用于处理前端页面跳转，调用业务层实现前端页面动态数据的展示。</p>
+<p><strong>视图层</strong>：页面展示。</p>
+<h4 id="JAVAEE分层模型"><a href="#JAVAEE分层模型" class="headerlink" title="JAVAEE分层模型"></a>JAVAEE分层模型</h4><p>就是SpringMVC，除此之外多了一个DO。<br><strong>Domain Object(领域对象)层</strong></p>
+<p>DO是从现实世界中抽象出来的有形或无形的业务实体。</p>
+<p>说白了像一个entity对应一张表叫DO。</p>
+<p><strong>DAO(数据访问对象)层</strong><br>DAO实现了对数据库的CRUD等常见操作。</p>
+<p><strong>Service(业务逻辑)层</strong><br>实现了系统所需要的业务逻辑方法。</p>
+<p><strong>Controller(控制器)层</strong><br>本层由一系列控制器组成，这些控制器用于拦截用户的请求，并调用业务逻辑组件的业务逻辑方法去处理用户请求，然后根据处理结果向不同的View组件转发。</p>
+<p><strong>View(表现层)层</strong><br>页面展示。</p>
+<p>分层模型图如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/3a9d1d1175bf4645b35363b16a857e90.png#pic_center" alt="出自JAVA代码安全审计"></p>
+<h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><p>1.Java代码安全审计（入门篇）                徐焱</p>
+<p>2.<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45442296/article/details/123111903">https://blog.csdn.net/weixin_45442296/article/details/123111903</a>      JavaRange</p>
+<p>3.<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43391574/article/details/110944815">https://blog.csdn.net/qq_43391574/article/details/110944815</a>             落雨青石街</p>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://www.squirt1e.top">Squirt1e</a></p><p> <span>Link:  </span><a href="http://www.squirt1e.top/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/">http://www.squirt1e.top/2021/11/12/java-dai-ma-shen-ji-ji-chu-jia-gou/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license noopener" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="prevSlogan" href="/2021/11/15/java-dai-ma-shen-ji-ji-chu-fan-she/" title="Java代码审计基础—反射"><span>< PreviousPost</span><br><span class="prevTitle">Java代码审计基础—反射</span></a><a class="nextSlogan" href="/2021/11/05/docker-ji-chu-ming-ling-xue-xi/" title="docker基础命令学习"><span>NextPost ></span><br><span class="nextTitle">docker基础命令学习</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#MVC"><span class="toc-number">1.</span> <span class="toc-text">MVC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#SpringMVC"><span class="toc-number">2.</span> <span class="toc-text">SpringMVC</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#JAVAEE%E5%88%86%E5%B1%82%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">JAVAEE分层模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%8C%AE"><span class="toc-number">4.</span> <span class="toc-text">参考文献</span></a></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

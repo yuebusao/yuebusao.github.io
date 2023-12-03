@@ -99,7 +99,7 @@
 <link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
   i.fa.fa-comment
   .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="http://114.67.236.137/pic/5634a4a770a0497be3f36bdc068c6f7.jpg" target="_black">美</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">dom-clobbering学习+XSS GAME简单题</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-12-03</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="XSS"> XSS</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="日常学习"> 日常学习</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">2.6k</span> | Reading time: <span class="post-count">12</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><blockquote>
-<p>好久没学习新知识了，这次来学习下dom破坏。正好S&amp;P发了篇关于dom破坏的顶会，也顺带看看。不过看顶会前还是要通过实践学习一下DOM破坏的原理。</p>
+<p>好久没学习新知识了，这次来学习下dom-clobbering。正好S&amp;P发了篇关于dom-clobbering的顶会，也顺带看看。不过看顶会前还是要通过实践学习一下DOM破坏的原理。</p>
 </blockquote>
 <h4 id="标签属性引用"><a href="#标签属性引用" class="headerlink" title="标签属性引用"></a>标签属性引用</h4><p>先来看一个例子：</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
@@ -118,7 +118,8 @@
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>两个<code>form</code>表单，其中使用<code>document</code>对象是无法访问<code>id</code>属性的。其他的无论是直接输出<code>squirt1e</code>还是通过<code>window</code>引用都是可以的。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701500207047.png" alt="1701500207047"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701500207047.png" alt="1701500207047" style="zoom:50%;" />
+
 <p>而<code>object</code>标签却可以被<code>document</code>引用。</p>
 <pre class="line-numbers language-html"><code class="language-html">    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>object</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jieni<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>object</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>object</span> <span class="token attr-name">name</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>jieni123<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>object</span><span class="token punctuation">></span></span>
@@ -131,16 +132,19 @@
         console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span>window<span class="token punctuation">.</span>jieni123<span class="token punctuation">)</span><span class="token punctuation">;</span>
     </span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701500511974.png" alt="1701500511974"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701500511974.png" alt="1701500511974" style="zoom:50%;" />
+
 <h4 id="cookie覆盖"><a href="#cookie覆盖" class="headerlink" title="cookie覆盖"></a>cookie覆盖</h4><pre><code>document.cookie
 var div=document.createElement(&#39;div&#39;)
 div.innerHTML=&#39;&lt;img name=cookie&gt;&#39;
 document.body.appendChild(div)
 </code></pre>
 <p>创建一个<code>img</code>标签<code>name</code>为<code>cookie</code>。因为我们是通过<code>document.cookie</code>来获取当前页面的<code>cookie</code>的，通过属性引用的特性来覆盖掉<code>document.cookie</code>。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701501208880.png" alt="1701501208880"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701501208880.png" alt="1701501208880" style="zoom:50%;" />
+
 <p>我随便找了个站点，试了试还真能覆盖。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20231202152905362.png" alt="image-20231202152905362"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20231202152905362.png" alt="image-20231202152905362" style="zoom:50%;" />
+
 <h4 id="覆盖函数"><a href="#覆盖函数" class="headerlink" title="覆盖函数"></a>覆盖函数</h4><p>都能覆盖变量，那肯定能覆盖函数了。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
@@ -165,7 +169,8 @@ document.body.appendChild(div)
 !== Object.prototype.toString)
 </code></pre>
 <p>找到了a以及area标签。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701505033603.png" alt="1701505033603"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701505033603.png" alt="1701505033603" style="zoom:50%;" />
+
 <p><code>alert</code>会把参数转成字符串。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
@@ -177,7 +182,8 @@ document.body.appendChild(div)
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701505833826.png" alt="1701505833826"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701505833826.png" alt="1701505833826" style="zoom:50%;" />
+
 <h4 id="集合取值"><a href="#集合取值" class="headerlink" title="集合取值"></a>集合取值</h4><p>看到这里的同学可能会有一些想法，比如这种嵌套标签是否也可以打。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
@@ -192,7 +198,8 @@ document.body.appendChild(div)
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>实际上这样是不行的</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701506583040.png" alt="1701506583040"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701506583040.png" alt="1701506583040" style="zoom:50%;" />
+
 <p>细心的小伙伴发现我在覆盖函数中用到了这样的嵌套方式。但是我尝试了几个标签发现只有<code>img</code>才可以取到值，这正是后面层级关系提取到的一种情况。而能够利用<code>toString</code>的<code>a,area</code>都不可以通过这种方式取值。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
@@ -221,7 +228,8 @@ document.body.appendChild(div)
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701506974932.png"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701506974932.png" style="zoom:50%;" />
+
 <h4 id="层级关系取值"><a href="#层级关系取值" class="headerlink" title="层级关系取值"></a>层级关系取值</h4><p>用这个脚本，思路就是遍历标签，看哪个标签层级组合能通过<code>a.b</code>的形式取到值。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
     <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
@@ -247,7 +255,8 @@ document.body.appendChild(div)
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>输出了这些。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701530292509.png" alt="1701530292509"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701530292509.png" alt="1701530292509" style="zoom:50%;" />
+
 <p>比如这样就能取到值。</p>
 <pre><code>&lt;html&gt;
     &lt;head&gt;
@@ -307,13 +316,15 @@ document.body.appendChild(div)
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>输出了有九百多条。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701589219643.png" alt="1701589219643"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701589219643.png" alt="1701589219643" style="zoom:50%;" />
+
 <p>比如这样</p>
 <pre><code>var div=document.createElement(&#39;div&#39;)
 div.innerHTML=&#39;&lt;a id=&quot;test&quot; ping=123&gt;&#39;
 document.body.appendChild(div)
 </code></pre>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701589439645.png" alt="1701589439645"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701589439645.png" alt="1701589439645" style="zoom:50%;" />
+
 <p>这部分还有个<code>nb</code>的操作就是<code>a</code>标签的<code>username</code>和<code>password</code>属性，他们是<code>a</code>标签的节点属性并不是<code>html</code>中定义的属性，这两个属性可以通过<code>url</code>的中的<code>username</code>字段和<code>password</code>字段提供，但是因为是<code>ftp</code>协议，所以需要补上<code>@</code>。当然，<code>http</code>协议也可以通过这样来取值。</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span>x</span> <span class="token attr-name">href</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>ftp:Clobbered-username:Clobbered-Password@a<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>a</span><span class="token punctuation">></span></span>
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span><span class="token punctuation">></span></span><span class="token script language-javascript">     
@@ -438,7 +449,8 @@ eval(mafia)
 <pre><code>&lt;area id=ok href=&quot;javascript:alert(1337)&quot;&gt;
 </code></pre>
 <p>这里需要注意的是<code>href</code>的值要遵守<code>protocol:uri</code>的格式，不遵守的话就成这样了：</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701598173523.png" alt="1701598173523"></p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701598173523.png" alt="1701598173523" style="zoom:50%;" />
+
 <p>然而这样是不行的，因为这里经过了<code>DOMPurify.sanitize</code>过滤。我们可以看<code>DOM purify</code>的源码(<a target="_blank" rel="noopener" href="https://github.com/cure53/DOMPurify/blob/main/src/regexp.js)%E3%80%82">https://github.com/cure53/DOMPurify/blob/main/src/regexp.js)。</a></p>
 <p>这里设定了白名单协议。</p>
 <pre><code>export const IS_ALLOWED_URI = seal(
@@ -446,8 +458,9 @@ eval(mafia)
 );
 </code></pre>
 <p>可以用到的协议。</p>
-<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701598575781.png" alt="1701598575781"></p>
-<p>这里试了几个，这些事包能打通的。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701598575781.png" alt="1701598575781" style="zoom:50%;" />
+
+<p>这里试了几个，这些是能打通的。</p>
 <pre><code>&lt;area id=ok href=&quot;xmpp:alert(1)&quot;&gt;
 &lt;area id=ok href=&quot;cid:alert(1)&quot;&gt;
 &lt;area id=ok href=&quot;mailto:alert(1)&quot;&gt;

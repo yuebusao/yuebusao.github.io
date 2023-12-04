@@ -143,7 +143,7 @@ Flow content, but with no form element descendants.
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><code>That&#39;s cool,man.</code></p>
 <p><code>form2</code>真的被浏览器君吃掉了。</p>
-<img src="./pic\1701673837259.png" alt="1701673837259" style="zoom: 67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701673837259.png" alt="1701673837259" style="zoom: 67%;" />
 
 <p><code>form</code>无法嵌套创建的原因：<strong>当识别到 <code>form</code>标记时，解析器需要记录一下当前是使用表单元素指针打开的。只有指针为空的时候才可以继续创建表单元素，显然上述这种情况指针还是存在的。</strong></p>
 <p>然后作者又提到了一个变异的<code>trick</code>可以搞一个嵌套，以下面为例：</p>
@@ -157,7 +157,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>这个就可以。</p>
-<img src=".\pic\1701674343414.png" alt="1701674343414" style="zoom:67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701674343414.png" alt="1701674343414" style="zoom:67%;" />
 
 <p>让我们跟着作者分析一下原因：</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>inner<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span>
@@ -190,13 +190,13 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>看看被渲染成了什么样。</p>
-<img src=".\pic\1701677604463.png" alt="1701677604463" style="zoom:67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701677604463.png" alt="1701677604463" style="zoom:67%;" />
 
 <p>第一个<code>style</code>里的<code>a</code>标签果然被当成了文本，但由于第二个<code>style</code>在<code>svg</code>中，切换了命名空间。因此这时候<code>a</code>标签会被渲染出来。</p>
 <p><code>That&#39;s pretty cool,man.</code></p>
 <p>到这里作者泼了冷水：</p>
 <blockquote>
-<p>如果我们在 <svg> 或 <math> 内部，那么理论上来说所有元素也都在非 HTML 命名空间中。然而事实并不是如此，HTML 规范中有一些元素称为MathML 文本集成点和 HTML 集成点。 这些元素的子元素具有 HTML 命名空间。</p>
+<p>如果我们在 <code>&lt;svg&gt;</code> 或 <code>&lt;math&gt;</code> 内部，那么理论上来说所有元素也都在非 <code>HTML</code> 命名空间中。然而事实并不是如此，<code>HTML</code> 规范中有一些元素称为<code>MathML</code> 文本集成点和 <code>HTML</code> 集成点。 这些元素的子元素具有 <code>HTML</code> 命名空间。</p>
 </blockquote>
 <p>再来看一个例子：</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>html</span><span class="token punctuation">></span></span>
@@ -211,7 +211,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><code>math</code>标签的儿子<code>style</code>元素位于<code>MathML</code>命名空间中，而 <code>mtext</code> 中的<code>style</code>元素位于 <code>HTML</code>命名空间中。 这是因为<code>mtext</code>是 <code>MathML</code> 文本集成点，并使解析器切换命名空间。</p>
-<img src=".\pic\1701678240650.png" alt="1701678240650" style="zoom:67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701678240650.png" alt="1701678240650" style="zoom:67%;" />
 
 <p><a target="_blank" rel="noopener" href="https://dev.w3.org/html5/spec-LC/tree-construction.html">集成点参考这个</a>：</p>
 <p><strong>MathML:</strong></p>
@@ -244,7 +244,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>因为<code>mglyph</code>是<code>mtext</code>的直接子元素，因此他的命名空间是<code>MathML</code>,所有他下面的<code>a</code>标签渲染出来了。而第二个<code>mglyph</code>是二级子节点，因此渲染不出来<code>a</code>标签，因为命名空间是<code>HTML</code>。</p>
-<img src=".\pic\1701679627566.png" alt="1701679627566" style="zoom:67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701679627566.png" alt="1701679627566" style="zoom:67%;" />
 
 <p>作者到这里整理一下判断不同命名空间的法则，我只能说这就是黑客吧（膜）：</p>
 <ul>
@@ -259,7 +259,7 @@ Flow content, but with no form element descendants.
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
 <p>这个<code>payload</code>融合了<code>form</code>嵌套导致的解析问题以及命名空间混淆导致<code>svg</code>下面的<code>style</code>的子元素是文本。</p>
 <p>第一次这个文本是会被解析成这样的：</p>
-<img src=".\pic\6415e83558da0d64bdd9cf4211b0ed3.png" alt="6415e83558da0d64bdd9cf4211b0ed3" style="zoom:67%;" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/6415e83558da0d64bdd9cf4211b0ed3.png" alt="6415e83558da0d64bdd9cf4211b0ed3" style="zoom:67%;" />
 
 <p>接下来着重讲一下为什么会变成这样子。</p>
 <p>到第三层的<code>mtext</code>都没什么好说的，后面碰到了<code>/form</code>结尾导致指针清空，之后碰到<code>form</code>这也就导致可以<code>form</code>嵌套了。然后后面又放了个<code>mglyph</code>，这是最他妈牛逼的点。因为<code>mtext</code>是集成点，而下面的儿子是<code>form</code>，所以之后的都是<code>html</code>命名空间，包括<code>mglyph</code>，那么后面的<code>style</code>自然也不用说了他就是个<code>text</code>！！！！</p>

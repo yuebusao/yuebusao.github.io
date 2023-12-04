@@ -157,7 +157,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>这个就可以。</p>
-<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701674343414.png" alt="1701674343414" width="25%" height="25%" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701674343414.png" alt="1701674343414" width="5%" height="5%" />
 
 <p>让我们跟着作者分析一下原因：</p>
 <pre class="line-numbers language-html"><code class="language-html"><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>outer<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>div</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>form</span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>form</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>inner<span class="token punctuation">"</span></span><span class="token punctuation">></span></span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>input</span><span class="token punctuation">></span></span>
@@ -190,7 +190,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>看看被渲染成了什么样。</p>
-<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701677604463.png" alt="1701677604463" width="25%" height="25%" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701677604463.png" alt="1701677604463" width="5%" height="5%" />
 
 <p>第一个<code>style</code>里的<code>a</code>标签果然被当成了文本，但由于第二个<code>style</code>在<code>svg</code>中，切换了命名空间。因此这时候<code>a</code>标签会被渲染出来。</p>
 <p><code>That&#39;s pretty cool,man.</code></p>
@@ -211,7 +211,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p><code>math</code>标签的儿子<code>style</code>元素位于<code>MathML</code>命名空间中，而 <code>mtext</code> 中的<code>style</code>元素位于 <code>HTML</code>命名空间中。 这是因为<code>mtext</code>是 <code>MathML</code> 文本集成点，并使解析器切换命名空间。</p>
-<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701678240650.png" alt="1701678240650" width="25%" height="25%" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701678240650.png" alt="1701678240650" width="5%" height="5%" />
 
 <p><a target="_blank" rel="noopener" href="https://dev.w3.org/html5/spec-LC/tree-construction.html">集成点参考这个</a>：</p>
 <p><strong>MathML:</strong></p>
@@ -244,7 +244,7 @@ Flow content, but with no form element descendants.
 <span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>html</span><span class="token punctuation">></span></span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>因为<code>mglyph</code>是<code>mtext</code>的直接子元素，因此他的命名空间是<code>MathML</code>,所有他下面的<code>a</code>标签渲染出来了。而第二个<code>mglyph</code>是二级子节点，因此渲染不出来<code>a</code>标签，因为命名空间是<code>HTML</code>。</p>
-<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701679627566.png" alt="1701679627566" width="25%" height="25%" />
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1701679627566.png" alt="1701679627566" width="5%" height="5%" />
 
 <p>作者到这里整理一下判断不同命名空间的法则，我只能说这就是黑客吧（膜）：</p>
 <ul>

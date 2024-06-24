@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s" />
+     <link rel="shortcut icon" href= /img/favicon1.ico >
+    <title>
+        Squirt1e&#39;s blog
+    </title>
+    <meta name="description" content= 欢迎访问！ >
+    <meta name="keywords" content= Blog,Squirt1e >
+    
+<link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            Java代码审计基础—架构
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <blockquote>
+<p>架构的目的就是分层，使得职能分离。</p>
+</blockquote>
+<h4 id="MVC"><a href="#MVC" class="headerlink" title="MVC"></a>MVC</h4><ul>
+<li>M 代表 模型（Model）：用来取数据的，我的理解是充当DAO层以及POJO这些。</li>
+<li>V 代表 视图（View）：负责页面展示。</li>
+<li>C 代表 控制器（Controller) ：处理逻辑，控制页面跳转。</li>
+</ul>
+<p>这样的目的主要是把View和Model分离，改样式就动View层，Controller负责逻辑，也就是与V和M之间的联系。</p>
+<h4 id="SpringMVC"><a href="#SpringMVC" class="headerlink" title="SpringMVC"></a>SpringMVC</h4><p>可以看到MVC分离的还不够细化，因此SpringMVC实现了把控制器分为控制层以及业务层（实际上咱现在用的基本都是SpringMVC以及SpringBoot这种）</p>
+<p>SpringMVC：视图层调用控制层，控制层调用业务层，业务层调用数据访问层。</p>
+<p><strong>数据访问层</strong>：data access object(DAO)，DAO就是封装实体类在数据库中增删改查的操作。</p>
+<p><strong>业务层</strong>：用来写业务逻辑的<br>对于Service，就是 Servlet 和 Dao 层之间缓冲的层。通过这一层来进行解耦，使得 Dao 层内的变化不会直接影响到 Servlet 层。</p>
+<p><strong>控制层</strong>：MVC中的Controller，用于处理前端页面跳转，调用业务层实现前端页面动态数据的展示。</p>
+<p><strong>视图层</strong>：页面展示。</p>
+<h4 id="JAVAEE分层模型"><a href="#JAVAEE分层模型" class="headerlink" title="JAVAEE分层模型"></a>JAVAEE分层模型</h4><p>就是SpringMVC，除此之外多了一个DO。<br><strong>Domain Object(领域对象)层</strong></p>
+<p>DO是从现实世界中抽象出来的有形或无形的业务实体。</p>
+<p>说白了像一个entity对应一张表叫DO。</p>
+<p><strong>DAO(数据访问对象)层</strong><br>DAO实现了对数据库的CRUD等常见操作。</p>
+<p><strong>Service(业务逻辑)层</strong><br>实现了系统所需要的业务逻辑方法。</p>
+<p><strong>Controller(控制器)层</strong><br>本层由一系列控制器组成，这些控制器用于拦截用户的请求，并调用业务逻辑组件的业务逻辑方法去处理用户请求，然后根据处理结果向不同的View组件转发。</p>
+<p><strong>View(表现层)层</strong><br>页面展示。</p>
+<p>分层模型图如下：</p>
+<p><img src="https://img-blog.csdnimg.cn/3a9d1d1175bf4645b35363b16a857e90.png#pic_center" alt="出自JAVA代码安全审计"></p>
+<h4 id="参考文献"><a href="#参考文献" class="headerlink" title="参考文献"></a>参考文献</h4><p>1.Java代码安全审计（入门篇）                徐焱</p>
+<p>2.<a target="_blank" rel="noopener" href="https://blog.csdn.net/weixin_45442296/article/details/123111903">https://blog.csdn.net/weixin_45442296/article/details/123111903</a>      JavaRange</p>
+<p>3.<a target="_blank" rel="noopener" href="https://blog.csdn.net/qq_43391574/article/details/110944815">https://blog.csdn.net/qq_43391574/article/details/110944815</a>             落雨青石街</p>
+
+    </div>
+
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>版权所有 © 2020 | 作者: Squirt1e | 主题 By <a class="theme-author" target="_blank" rel="noopener" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">本站浏览总访问量: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">本站访问人数: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="">
+<input type="hidden" id="valine_appKey" value="">
+
+<script src="/libs/jquery.min.js"></script>
+
+
+<script src="/libs/highlight/highlight.pack.js"></script>
+
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+
+<script src="/js/js.js"></script>
+
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

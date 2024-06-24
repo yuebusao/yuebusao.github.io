@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s" />
+     <link rel="shortcut icon" href= /img/favicon1.ico >
+    <title>
+        Squirt1e&#39;s blog
+    </title>
+    <meta name="description" content= 欢迎访问！ >
+    <meta name="keywords" content= Blog,Squirt1e >
+    
+<link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            CC1_LazyMap分析
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <blockquote>
+<p>上回讲到CC1中的TransformedMap#checksetValue调用ChainedTransformer#transform这条链子，这回学习LazyMap#get这条路。CC6也用到了LazyMap这条路，因此这条链子需要细品。</p>
+</blockquote>
+<h5 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h5><p>从transform说起，上回CC1讲解到了通过ChainedTransformer链式调用从而实现RCE，我们的目的就是找谁调用ChainedTransformer#transform，如果类的实例一般都可以通过构造方法初始化，因此我们找谁调用了transform就可以了。</p>
+<p>Find Usages，发现LazyMap#get方法调用了transform，如果map中不包含这个key，则调用；若包含，则return map.get(key)。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823132756796.png" alt="image-20220823132756796" style="zoom: 67%;" />
+
+<p>与TransformedMap相同，LazyMap也是通过decorate方法实例化自身，factory我们传chainedTransformer就可以了，至于map我们先传一个空的。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823132938918.png" alt="image-20220823132938918" style="zoom:67%;" />
+
+<p>前面不变，分析到这一步的exp为：</p>
+<pre class="line-numbers language-java"><code class="language-java">        Transformer<span class="token punctuation">[</span><span class="token punctuation">]</span> transformers<span class="token operator">=</span><span class="token keyword">new</span> <span class="token class-name">Transformer</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">{</span>
+                <span class="token keyword">new</span> <span class="token class-name">ConstantTransformer</span><span class="token punctuation">(</span>Runtime<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">new</span> <span class="token class-name">InvokerTransformer</span><span class="token punctuation">(</span><span class="token string">"getMethod"</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span>String<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span>Class<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span><span class="token string">"getRuntime"</span><span class="token punctuation">,</span>null<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">new</span> <span class="token class-name">InvokerTransformer</span><span class="token punctuation">(</span><span class="token string">"invoke"</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span>Object<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">,</span>Object<span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span> <span class="token punctuation">{</span>null<span class="token punctuation">,</span>null<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">new</span> <span class="token class-name">InvokerTransformer</span><span class="token punctuation">(</span><span class="token string">"exec"</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Class</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">{</span>String<span class="token punctuation">.</span><span class="token keyword">class</span><span class="token punctuation">}</span><span class="token punctuation">,</span><span class="token keyword">new</span> <span class="token class-name">Object</span><span class="token punctuation">[</span><span class="token punctuation">]</span><span class="token punctuation">{</span><span class="token string">"calc"</span><span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+                <span class="token keyword">new</span> <span class="token class-name">ConstantTransformer</span><span class="token punctuation">(</span><span class="token number">1</span><span class="token punctuation">)</span><span class="token punctuation">,</span>
+        <span class="token punctuation">}</span><span class="token punctuation">;</span>
+        ChainedTransformer c<span class="token operator">=</span><span class="token keyword">new</span> <span class="token class-name">ChainedTransformer</span><span class="token punctuation">(</span>transformers<span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        HashMap map<span class="token operator">=</span><span class="token keyword">new</span> <span class="token class-name">HashMap</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+        Map lazyMap<span class="token operator">=</span> LazyMap<span class="token punctuation">.</span><span class="token function">decorate</span><span class="token punctuation">(</span>map<span class="token punctuation">,</span>c<span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment" spellcheck="true">//实例化LazyMap</span>
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<p>接下来找谁调用了LazyMap#get,我们可以看到AnnotationInvocationHandler#invoke调用了get，我们只需要把memberValues赋值lazyMap即可。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823135153801.png" alt="image-20220823135153801" style="zoom: 67%;" />
+
+<p>InvocationHandler接口是proxy代理实例的调用处理程序实现的一个接口，AnnotationInvocationHandler继承自InvocationHandler。简而言之我们需要通过Proxy代理AnnotationInvocationHandler的一个实例，只要这个代理调用了任意一个方法，那么就会触发AnnotationInvocationHandler#invoke，显然，这个被代理的实例的membervalue要赋值lazyMap。</p>
+<p>为此，我们首先要实例化一个被代理的annotationInvocationHandler，接着要实例化一个annotationInvocationHandler用来把这个代理对象传进去。</p>
+<p>链子：</p>
+<pre class="line-numbers language-java"><code class="language-java">AnnotationInvocationHandler#readobject
+<span class="token function">Proxy</span><span class="token punctuation">(</span>AnnotationInvocationHandler<span class="token punctuation">)</span><span class="token punctuation">.</span>xxx
+AnnotationInvocationHandler#invoke
+LazyMap#get
+ChainedTransformer#transform
+InvokerTransformer#transform
+<span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
+<h5 id="调试"><a href="#调试" class="headerlink" title="调试"></a>调试</h5><p>直接断到AnnotationInvocationHandler#invoke方法中的执行get处，</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823141057434.png" alt="image-20220823141057434"  />
+
+<p>我们查看一下当前的几个重要变量。memberValues正是exp第一次实例化传入的LazyMap，var2是触发invoke的方法名称。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823141307332.png" alt="image-20220823141307332"></p>
+<p>回看AnnotationInvocationHandler#readObject，这里确实调用了entrySet()方法。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823141449245.png" alt="image-20220823141449245"></p>
+<p>跟进get方法，这里传来的key就是方法名entrySet，显然这个空map不存在这个key，因此执行transform。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823141657649.png" alt="image-20220823141657649"></p>
+<p>接着就走到了ChainedTransformer#transform链式调用InvokerTransformer从而RCE。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823141853772.png" alt="image-20220823141853772"></p>
+<p>RCE。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823142035973.png" alt="image-20220823142035973"></p>
+<h5 id="隐藏异常日志的思考"><a href="#隐藏异常日志的思考" class="headerlink" title="隐藏异常日志的思考"></a>隐藏异常日志的思考</h5><blockquote>
+<p>个人思考，最后也没分析出为啥。</p>
+</blockquote>
+<p>细心的小伙伴儿会看到exp里的Transformer数组最后多处要给new ConstantTransformer(1),这是干啥用的？</p>
+<p>先上结论：</p>
+<p><strong>如果不加这一句，则报错：</strong></p>
+<p><strong>Exception in thread “main” java.lang.ClassCastException: java.lang.ProcessImpl cannot be cast to java.util.Set</strong></p>
+<p><strong>如果加上，则报错：</strong></p>
+<p>**Exception in thread “main” java.lang.ClassCastException: java.lang.Integer cannot be cast to java.util.Set **</p>
+<p>ProcessImpl是Process抽象类的实现类，运维人员一看，这块反序列化居然会出现Process这个进程类，肯定会排查。</p>
+<p>可以看到链式调用执行完calc弹出计算器，此时object为ProcessImpl。这是因为getRuntime.exec()实际上就是调用ProcessBuilder.start()，而processImpl是被ProcessBuilder.start()这个方法进行创建的。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823142210674.png" alt="image-20220823142210674"></p>
+<p>而显然他还要接着触发ConstantTransformer(），从而返回1。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823142559561.png" alt="image-20220823142559561"></p>
+<p>LazyMap#get返回1。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823142644704.png" alt="image-20220823142644704" style="zoom: 80%;" />
+
+<p>调试的过程中发现“Object var6 &#x3D; this.memberValues.get(var4);”get方法返回的var6居然是-1，百思不得其解。</p>
+<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823143749904.png" alt="image-20220823143749904" style="zoom: 80%;" />
+
+<p>而调到这里，再往下分析就直接跳到这里，报错。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823144630811.png" alt="image-20220823144630811"></p>
+<p>往下分析到了ObjectStreamClass#invokeReadObject，可以看到动态代理调用invoke是通过ObjectStreamClass来调用的。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823145822137.png" alt="image-20220823145822137"></p>
+<p>就是在这个方法抛出了异常。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20220823150146149.png" alt="image-20220823150146149"></p>
+<p>至于他为啥会报这个，我怀疑是该invoke方法由entrySet()触发所以会报这个错误？</p>
+<h5 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h5><ol>
+<li><a target="_blank" rel="noopener" href="https://space.bilibili.com/2142877265?spm_id_from=333.337.0.0">https://space.bilibili.com/2142877265?spm_id_from=333.337.0.0</a> 白日梦组长</li>
+</ol>
+
+    </div>
+
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>版权所有 © 2020 | 作者: Squirt1e | 主题 By <a class="theme-author" target="_blank" rel="noopener" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">本站浏览总访问量: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">本站访问人数: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="">
+<input type="hidden" id="valine_appKey" value="">
+
+<script src="/libs/jquery.min.js"></script>
+
+
+<script src="/libs/highlight/highlight.pack.js"></script>
+
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+
+<script src="/js/js.js"></script>
+
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

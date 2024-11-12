@@ -37,14 +37,13 @@
         <blockquote>
 <p>geekcon2024 jsjcw师傅披露的fastjson 1.2.80在spring下的RCE利用有很多值得学习的地方。这么看去年出的elephantcms又多了一个非预期，不过这个非预期比预期解还难😓</p>
 </blockquote>
-<h4 id="问题1：缓存InputStream"><a href="#问题1：缓存InputStream" class="headerlink" title="问题1：缓存InputStream"></a>问题1：缓存InputStream</h4><h5 id="怎么缓存InputStream"><a href="#怎么缓存InputStream" class="headerlink" title="怎么缓存InputStream"></a>怎么缓存InputStream</h5><p><code>1.2.68</code>的修复方式将<code>java.lang.Runnable</code>、<code>java.lang.Readable</code>和<code>java.lang.AutoCloseable</code>加入了黑名单。在<code>1.2.80</code>用到了另一个期望类：<code>Throwable</code>和<code>Exception</code>，本次用的是<code>Exception</code>。</p>
-<p>学习本次挖掘<code>gadget</code>需了解关键特性1：<strong>fastjson反序列化符合条件的期望类时，会将<code>setter</code>参数、<code>public</code>字段、构造函数参数也加到缓存当中</strong>。</p>
+<h4 id="问题1：缓存InputStream"><a href="#问题1：缓存InputStream" class="headerlink" title="问题1：缓存InputStream"></a>问题1：缓存InputStream</h4><h5 id="怎么缓存InputStream"><a href="#怎么缓存InputStream" class="headerlink" title="怎么缓存InputStream"></a>怎么缓存InputStream</h5><p><code>1.2.68</code>的修复方式将<code>java.lang.Runnable</code>、<code>java.lang.Readable</code>和<code>java.lang.AutoCloseable</code>加入了黑名单。在<code>1.2.80</code>的常见利用中用到的期望类为：<code>Throwable</code>和<code>Exception</code>，而本次<code>gadget</code>用到的是<code>Exception</code>。</p>
+<p>学习本次挖掘<code>gadget</code>需了解关键特性1：<strong>fastjson反序列化符合条件的期望类时，会将<code>setter</code>参数、<code>public</code>字段、构造函数参数加到缓存中</strong>。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731045004757.png" alt="1731045004757"></p>
-<p>这里<code>payload1</code>是利用<code>Exception</code>而不是<code>Throwable</code>。</p>
-<p>我们先发一个看看他是怎么缓存新类的：</p>
+<p>我们先发一个简单的<code>payload</code>看看<code>fastjson</code>是怎么缓存新类的：</p>
 <pre><code>&#123;&quot;@type&quot;:&quot;java.lang.Exception&quot;,&quot;@type&quot;:&quot;com.fasterxml.jackson.core.exc.InputCoercionException&quot;&#125;
 </code></pre>
-<p>跟到<code>ParserConfig#checkAutoType</code>：</p>
+<p>跟进到<code>com.alibaba.fastjson.parser.ParserConfig#checkAutoType</code>：</p>
 <pre><code>checkAutoType:1444, ParserConfig (com.alibaba.fastjson.parser)
 parseObject:343, DefaultJSONParser (com.alibaba.fastjson.parser)
 parse:1430, DefaultJSONParser (com.alibaba.fastjson.parser)
@@ -60,12 +59,12 @@ parse:191, JSON (com.alibaba.fastjson)
 parse:147, JSON (com.alibaba.fastjson)
 vuln:12, JSONController (org.example.controller)
 </code></pre>
-<p>这里从缓存取到了<code>Exception</code><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108140145092.png" alt="image-20241108140145092"></p>
-<p>在<code>TypeUtils</code>的<code>static</code>中调用<code>addBaseClassMappings</code>往<code>mappings</code>缓存中添加了<code>Exception</code>。</p>
+<p>发现这里从<code>Mapping</code>缓存取到了<code>Exception</code>期望类：<img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108140145092.png" alt="image-20241108140145092"></p>
+<p>可以看到在<code>TypeUtils</code>的<code>static</code>中（也就是初始化）调用<code>addBaseClassMappings</code>往<code>mappings</code>缓存中添加了<code>Exception</code>等期望类：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108140413822.png" alt="image-20241108140413822"></p>
-<p>后面找到<code>Exception</code>对应的反序列化器<code>ThrowableDeserializer</code></p>
+<p>在拿到对应的<code>Exception</code>类后该恢复字段信息了，这里我们的字段是特殊的<code>@type</code>。首先<code>fj</code>找到<code>Exception</code>对应的反序列化器<code>ThrowableDeserializer</code>：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731047938347.png" alt="1731047938347"></p>
-<p>拿到反序列化器后调用<code>ThrowableDeserializer#deserialize</code>，注意这里传了期望类（Throwable.class）：</p>
+<p>后续会走到<code>ThrowableDeserializer#deserialize</code>，注意这里传了期望类（Throwable.class）：</p>
 <pre><code>exClass = parser.getConfig().checkAutoType(exClassName, Throwable.class, lexer.getFeatures());
 </code></pre>
 <p>因此在<code>loadclass</code>后会把<code>com.fasterxml.jackson.core.exc.InputCoercionException</code>加到缓存：</p>
@@ -73,9 +72,9 @@ vuln:12, JSONController (org.example.controller)
 <p>ok，发送如下<code>payload</code>：</p>
 <pre class="line-numbers language-json"><code class="language-json"><span class="token punctuation">{</span><span class="token property">"@type"</span><span class="token operator">:</span><span class="token string">"java.lang.Exception"</span><span class="token punctuation">,</span><span class="token property">"@type"</span><span class="token operator">:</span><span class="token string">"com.fasterxml.jackson.core.exc.InputCoercionException"</span><span class="token punctuation">,</span><span class="token property">"p"</span><span class="token operator">:</span><span class="token punctuation">{</span><span class="token punctuation">}</span><span class="token punctuation">}</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>在拿到反序列化器并且<code>loadClass</code>后，用反序列化器拿到对应字段的字段反序列化实例<code>FieldDeserializer</code>。这里fileldInfo的class是JsonParser，因为我们的value是个jsonobject因此调用cast进行类型转换：</p>
+<p>在拿到反序列化器并且恢复完<code>InputCoercionException</code>后，后面用反序列化器拿到对应字段并根据<code>key</code>实例化<code>FieldDeserializer</code>。这里<code>fileldInfo</code>的<code>class</code>是<code>JsonParser</code>，因为我们的<code>value</code>是个<code>jsonobject</code>因此调用<code>cast</code>进行类型转换：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731050042273.png" alt="1731050042273"></p>
-<p>这个函数会根据传入对象的类型来进行对应的类型转换，传入的是<code>p</code>会走到Map的类型转换：</p>
+<p>这个函数会根据传入对象的类型来进行对应的类型转换，传入的是<code>p</code>会走到<code>Map</code>的类型转换：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731050469063.png" alt="1731050469063"></p>
 <p>注意这里拿了<code>com.fasterxml.jackson.core.JsonParser</code>的反序列化器。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108152301963.png" alt="image-20241108152301963"></p>
@@ -97,7 +96,7 @@ vuln:12, JSONController (org.example.controller)
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
 <p>而后续在反序列化<code>JsonParser</code>类过程中走<code>checkAutoType</code>就能取到这个类了：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108154008903.png" alt="image-20241108154008903"></p>
-<p>对<code>UTF8StreamJsonParser</code>来说他是<code>JsonParser</code>一个特殊<code>field</code>，情况和<code>Exception</code>之于<code>InputCoercionException</code>相似：</p>
+<p>对<code>UTF8StreamJsonParser</code>来说他是<code>JsonParser</code>一个特殊<code>field</code>，情况和<code>InputCoercionException</code>之于<code>Exception</code>相似：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108154441468.png">在<code>loadClass</code>该类后还是走这个添加缓存逻辑：</p>
 <pre class="line-numbers language-java"><code class="language-java"><span class="token keyword">if</span> <span class="token punctuation">(</span>expectClass<span class="token punctuation">.</span><span class="token function">isAssignableFrom</span><span class="token punctuation">(</span>clazz<span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
     TypeUtils<span class="token punctuation">.</span><span class="token function">addMapping</span><span class="token punctuation">(</span>typeName<span class="token punctuation">,</span> clazz<span class="token punctuation">)</span><span class="token punctuation">;</span>
@@ -105,23 +104,23 @@ vuln:12, JSONController (org.example.controller)
 <span class="token punctuation">}</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
 <p>而又因为<code>InputStream</code>是<code>UTF8StreamJsonParser</code>的构造参数因此不再赘述，与上述<code>InputCoercionException</code>之于<code>JsonParser</code>的情况类似。</p>
-<p>PS：翻了翻实现<code>JsonParser</code>的类还真只是<code>UTF8StreamJsonParser</code>的构造参数存在<code>InputStream</code>，因此想找新链的话只能从<code>InputCoercionException</code>甚至更往前找了:)</p>
-<p>整体<code>gadget</code>逻辑作者写的很清晰了：</p>
+<p>PS：翻了翻实现<code>JsonParser</code>的类发现确实只有<code>UTF8StreamJsonParser</code>的构造参数存在<code>InputStream</code>，因此想找新链的话只能从<code>InputCoercionException</code>甚至更往前找了:)</p>
+<p>整体<code>gadget</code>逻辑作者写的非常清晰：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731052436591.png" alt="1731052436591"></p>
 <h5 id="为什么缓存InputStream"><a href="#为什么缓存InputStream" class="headerlink" title="为什么缓存InputStream"></a>为什么缓存InputStream</h5><p>因为在<code>1.2.80 fastjson</code>禁了<code>AutoCloseable</code>，而<code>BH</code>之前爆出来的逐字节读文件的利用类<code>BOMInputStream</code>继承了<code>InputStream</code>，因此拿<code>InputStream</code>就是为了实现任意文件读。</p>
-<p>这里合理推测作者是看到这个<code>poc</code>开始挖掘的。在发现<code>AutoCloseable</code>被禁后退而求其次找<code>InputStream</code>，结合<code>fastjson</code>会缓存新类的特性找到了往缓存里塞<code>InputStream</code>的<code>gadget</code>。</p>
+<p>这里合理推测作者是看到这个<code>poc</code>开始挖掘<code>gadget</code>的。因为<code>AutoCloseable</code>被<code>ban</code>退而求其次找<code>InputStream</code>，结合<code>fastjson</code>缓存新类的特性找到了往缓存里塞<code>InputStream</code>的<code>gadget</code>。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108160540367.png" alt="image-20241108160540367"></p>
-<p>关于任意文件写，作者给出的<code>POC</code>应该是一个全新的链子解决了<code>8192</code>字节写入的问题，膜：</p>
+<p>关于任意文件写，作者应该是找到了一个全新的链子解决了必须<code>8192</code>字节的问题，膜：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731053582658.png" alt="1731053582658"></p>
 <p>不过话说回来之前看过一个<code>fj</code>绕<code>WAF</code>打任意文件写的<code>ctf</code>题，那道题最后限制了字符长度，打<code>8192</code>字节那条<code>gadget</code>会被<code>ban</code>，不知道是不是想考这条链子？</p>
-<h4 id="问题2：SpringBoot-任意文件写-to-RCE？"><a href="#问题2：SpringBoot-任意文件写-to-RCE？" class="headerlink" title="问题2：SpringBoot 任意文件写 to RCE？"></a>问题2：SpringBoot 任意文件写 to RCE？</h4><p>尽管之前有师傅提出了写<code>charset.jar</code>实现<code>RCE</code>的思路，但本人从来没有复现成功过，不是没权限就是类加载有问题。这里作者给了一个新的思路同样很值得学习。</p>
+<h4 id="问题2：SpringBoot-任意文件写-to-RCE？"><a href="#问题2：SpringBoot-任意文件写-to-RCE？" class="headerlink" title="问题2：SpringBoot 任意文件写 to RCE？"></a>问题2：SpringBoot 任意文件写 to RCE？</h4><p>尽管之前有师傅提出了写<code>charset.jar</code>实现<code>RCE</code>的思路，但本人从未复现成功过（不是没权限就是存在类加载问题）。这里作者给了一个新的思路同样很值得学习。</p>
 <p><code>fastjson</code>在类加载时通过<code>TomcatEmbeddedWebappClassLoader</code>类加载器加载类：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108163540689.png" alt="image-20241108163540689"></p>
 <p>根据双亲委派机制有些类会让<code>WebappClassLoaderBase</code>来加载。而<code>WebappClassLoaderBase#findClass</code>这里竟然有个加载内部类的逻辑：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108164104953.png" alt="image-20241108164104953"></p>
-<p>看一下路径，真是牛逼大了，居然在temp目录下有个新的类加载口子：</p>
-<p><img src="C:\Users\13035\AppData\Roaming\Typora\typora-user-images\image-20241108164546664.png" alt="image-20241108164546664"></p>
-<p>而在<code>linux</code>下<code>docbase</code>的路径在<code>/tmp</code>，因此往<code>docbase</code>路径下写类就可以打类加载了。不过在应用重启时又会出现新的<code>docbase</code>，图省事的话我们全都打一遍。</p>
+<p>看一下类加载路径，居然在<code>temp</code>目录下有个新的类加载口子：</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241108164546664.png" alt="image-20241108164546664"></p>
+<p>而在<code>linux</code>下<code>docbase</code>的路径在<code>/tmp</code>，因此往<code>docbase</code>路径下写类就可以打类加载了，而该路径可以通过路径遍历或任意文件读取得到。不过话说回来在应用重启时又会出现新的<code>docbase</code>，图省事的话我们全都打一遍。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/1731055641321.png" alt="1731055641321"></p>
 <h4 id="linux攻击流程"><a href="#linux攻击流程" class="headerlink" title="linux攻击流程"></a>linux攻击流程</h4><ol>
 <li>将<code>InputStream</code>放入<code>fastjson</code>缓存</li>

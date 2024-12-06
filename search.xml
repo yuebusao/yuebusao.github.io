@@ -4,6 +4,31 @@
   
     
     <entry>
+      <title>红队工具指纹对抗措施:nginx双向认证</title>
+      <link href="/2024/12/06/hong-dui-gong-ju-zhi-wen-dui-kang-cuo-shi/"/>
+      <url>/2024/12/06/hong-dui-gong-ju-zhi-wen-dui-kang-cuo-shi/</url>
+      
+        <content type="html"><![CDATA[<h3 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h3><p>最近VPS被我国封了，思来想去应该是前段时间在服务器搭了Vshell和nps忘记关了，虽然都改了端口但长期放在公网上还是被扫到了。应该不是服务商查杀病毒的问题，毕竟在控制台还是能正常登陆VPS的。</p><h3 id="对抗措施"><a href="#对抗措施" class="headerlink" title="对抗措施"></a>对抗措施</h3><p>平常会放在公网的服务一般都是http服务，既然是http服务的话那么就加个nginx反向代理，在反向代理中配置并过滤掉扫描请求。</p><p><a href="https://127.0.0.1:xxx是VPS起的服务（注意只监听127.0.0.1），nginx用proxy_pass转发请求过去就完事了。">https://127.0.0.1:xxx是VPS起的服务（注意只监听127.0.0.1），nginx用proxy_pass转发请求过去就完事了。</a></p><pre><code>server &#123;    listen xxx; # 监听端口    server_name xxx; # 服务名称    location / &#123;        proxy_pass https://127.0.0.1:xxx;         proxy_set_header Host $host;        proxy_set_header X-Real-IP $remote_addr;        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;            &#125;&#125;</code></pre><p>对抗指纹扫描这种需求当然是加白名单了，况且咱都不清楚要面对的黑色势力有多么恐怖。</p><h4 id="白名单IP"><a href="#白名单IP" class="headerlink" title="白名单IP"></a>白名单IP</h4><p>加白IP的话在server块中加入allow就行了，问题是客户端IP总是会变。除非还有一台VPS B做成跳板，以后访问VPS A(跑工具的VPS)均走VPS B的流量，但显然我没有第二台VPS。</p><pre><code>allow 1.1.1.1;deny all;</code></pre><h4 id="请求头校验"><a href="#请求头校验" class="headerlink" title="请求头校验"></a>请求头校验</h4><p>限制每次访问必须加上请求头X-Auth-Token:Squirt1e 才可访问服务，但问题是像点击登录给个服务那边给个302或者加载js是不会带上headers的，要这么搞的话还得改工具的代码太麻烦了。</p><pre><code>location / &#123;    # 检查请求头 X-Auth-Token 的值    if ($http_x_auth_token != &quot;Squirt1e&quot;) &#123;        return 404; # 如果不匹配，返回 404    &#125;    proxy_pass https://127.0.0.1:19003;    proxy_set_header Host $host;    proxy_set_header X-Real-IP $remote_addr;    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;&#125;</code></pre><h4 id="HTTPS双向认证"><a href="#HTTPS双向认证" class="headerlink" title="HTTPS双向认证"></a>HTTPS双向认证</h4><p>最好的办法应该就是双向认证了，配置nginx认证客户端即可。</p><p>首先要生成ca和客户端证书：</p><pre><code># ca certopenssl genrsa -out ca.key 2048openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt# clientopenssl genrsa -out client.key 2048openssl req -new -key client.key -out client.csr# client.certopenssl x509 -req -in client.csr -CA ca.crt -CAkey ca.key -CAcreateserial -out client.crt -days 3650 -sha256</code></pre><p>重点是配置好客户端证书，并且确保ssl_verify_client选项是打开的</p><p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241206211813426.png" alt="image-20241206211813426"></p><p>重启nginx，这样就必须认证才能看到服务了。</p><p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241206212007060.png" alt="image-20241206212007060"></p><p>浏览器导入证书的话最好转成pkcs格式：</p><pre><code>openssl pkcs12 -export -in client.crt -inkey client.key -out client.p12 -name &quot;client&quot;</code></pre><p>然后导入个人证书即可使用：</p><p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20241206212702538.png" alt="image-20241206212702538"></p>]]></content>
+      
+      
+      <categories>
+          
+          <category> 日常学习 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> MISC </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>fastjson 1.2.80 SpringBoot 新链</title>
       <link href="/2024/11/08/fastjson-1.2.80-springboot-xin-lian/"/>
       <url>/2024/11/08/fastjson-1.2.80-springboot-xin-lian/</url>

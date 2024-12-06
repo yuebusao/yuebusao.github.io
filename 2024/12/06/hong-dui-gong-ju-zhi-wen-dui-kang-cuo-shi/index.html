@@ -35,7 +35,7 @@
     </div>
     <div class="post-content">
         <h3 id="起因"><a href="#起因" class="headerlink" title="起因"></a>起因</h3><p>最近VPS被我国封了，思来想去应该是前段时间在服务器搭了Vshell和nps忘记关了，虽然都改了端口但长期放在公网上还是被扫到了。应该不是服务商查杀病毒的问题，毕竟在控制台还是能正常登陆VPS的。</p>
-<h3 id="对抗措施"><a href="#对抗措施" class="headerlink" title="对抗措施"></a>对抗措施</h3><p>平常会放在公网的服务一般都是http服务，既然是http服务的话那么就加个nginx反向代理，在反向代理中配置并过滤掉扫描请求。</p>
+<h3 id="对抗措施"><a href="#对抗措施" class="headerlink" title="对抗措施"></a>对抗措施</h3><p>平常会放在公网的服务一般都是http服务，既然是http服务的话那么就加个nginx反向代理，在反向代理中配置并过滤掉扫描请求即可。</p>
 <p><a href="https://127.0.0.1:xxx是VPS起的服务（注意只监听127.0.0.1），nginx用proxy_pass转发请求过去就完事了。">https://127.0.0.1:xxx是VPS起的服务（注意只监听127.0.0.1），nginx用proxy_pass转发请求过去就完事了。</a></p>
 <pre><code>server &#123;
     listen xxx; # 监听端口
@@ -49,7 +49,7 @@
     &#125;
 &#125;
 </code></pre>
-<p>对抗指纹扫描这种需求当然是加白名单了，况且咱都不清楚要面对的黑色势力有多么恐怖。</p>
+<p>对抗指纹扫描这种需求当然是加白名单了，毕竟咱都不清楚要面对的黑色势力有多么恐怖。</p>
 <h4 id="白名单IP"><a href="#白名单IP" class="headerlink" title="白名单IP"></a>白名单IP</h4><p>加白IP的话在server块中加入allow就行了，问题是客户端IP总是会变。除非还有一台VPS B做成跳板，以后访问VPS A(跑工具的VPS)均走VPS B的流量，但显然我没有第二台VPS。</p>
 <pre><code>allow 1.1.1.1;
 deny all;

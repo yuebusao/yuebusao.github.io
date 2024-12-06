@@ -66,8 +66,8 @@ deny all;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 &#125;
 </code></pre>
-<h4 id="HTTPS双向认证"><a href="#HTTPS双向认证" class="headerlink" title="HTTPS双向认证"></a>HTTPS双向认证</h4><p>最好的办法应该就是双向认证了，配置nginx认证客户端即可。</p>
-<p>首先要生成ca和客户端证书：</p>
+<h4 id="HTTPS双向认证"><a href="#HTTPS双向认证" class="headerlink" title="HTTPS双向认证"></a>HTTPS双向认证</h4><p>最好的办法应该就是双向认证了，需要配置nginx认证客户端证书。</p>
+<p>首先生成ca.crt和客户端证书：</p>
 <pre><code># ca cert
 openssl genrsa -out ca.key 2048
 openssl req -x509 -new -nodes -key ca.key -sha256 -days 3650 -out ca.crt

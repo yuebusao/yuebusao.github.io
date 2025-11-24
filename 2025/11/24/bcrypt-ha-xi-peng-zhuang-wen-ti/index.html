@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="renderer" content="webkit">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="google-site-verification" content="TZE0rZyIqLl10trYu3BWBWa1Vmz6HFwhb2OcNEK4u-s" />
+     <link rel="shortcut icon" href= /img/favicon1.ico >
+    <title>
+        Squirt1e&#39;s blog
+    </title>
+    <meta name="description" content= 欢迎访问！ >
+    <meta name="keywords" content= Blog,Squirt1e >
+    
+<link rel="stylesheet" href="/libs/highlight/styles/monokai-sublime.css">
+
+    
+<link rel="stylesheet" href="/libs/font-awesome/css/font-awesome.min.css">
+
+    
+<link rel="stylesheet" href="/css/style.css">
+
+<meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
+<link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
+<body id="bodyx">
+    <div class="hd posts">
+    <a href="/index.html"><i class="fa fa-home
+ replay-btn" aria-hidden="true"></i></a>
+    <div class="post-title">
+        <p>
+            
+        </p>
+        <hr>
+    </div>
+    <div class="post-content">
+        <pre><code>
+title: bcrypt哈希碰撞问题
+
+top: false
+
+cover: false
+
+toc: true
+
+mathjax: false
+
+date: 2025-11-25 19:05:04
+
+author: Squirt1e
+
+img:
+
+coverImg:
+
+password:
+
+summary: 无
+
+tags: [安全研究]
+
+categories: 安全研究
+</code></pre>
+<p>USE CASE</p>
+<pre><code>salt = bcrypt.gensalt()
+hashed = bcrypt.hashpw(password, salt)
+if bcrypt.checkpw(password, hashed):
+print(&quot;It Matches!&quot;)
+else:
+    print(&quot;It Does not Match :(&quot;)
+</code></pre>
+<h2 id="fuck-hash"><a href="#fuck-hash" class="headerlink" title="fuck hash"></a>fuck hash</h2><p><strong>python的hashpw是通过rust实现的：</strong></p>
+<p><a target="_blank" rel="noopener" href="https://github.com/pyca/bcrypt/blob/main/src/_bcrypt/src/lib.rs#L129C28-L129C42">bcrypt&#x2F;src&#x2F;_bcrypt&#x2F;src&#x2F;lib.rs at main · pyca&#x2F;bcrypt</a></p>
+<p><strong>rust-bcrypt不允许明文超过72字节：</strong></p>
+<pre><code>#[cfg(any(feature = &quot;alloc&quot;, feature = &quot;std&quot;))]
+fn _hash_password(
+    password: &amp;[u8],
+    cost: u32,
+    salt: [u8; 16],
+    err_on_truncation: bool,
+) -&gt; BcryptResult&lt;HashParts&gt; &#123;
+    if !(MIN_COST..=MAX_COST).contains(&amp;cost) &#123;
+        return Err(BcryptError::CostNotAllowed(cost));
+    &#125;
+
+    // Passwords need to be null terminated
+    let mut vec = Vec::with_capacity(password.len() + 1);
+    vec.extend_from_slice(password);
+    vec.push(0);
+    // We only consider the first 72 chars; truncate if necessary.
+    // `bcrypt` below will panic if len &gt; 72
+    let truncated = if vec.len() &gt; 72 &#123;
+        if err_on_truncation &#123;
+            return Err(BcryptError::Truncation(vec.len()));
+        &#125;
+        &amp;vec[..72]
+    &#125; else &#123;
+        &amp;vec
+    &#125;;
+
+    let output = bcrypt::bcrypt(cost, salt, truncated);
+
+    #[cfg(feature = &quot;zeroize&quot;)]
+    vec.zeroize();
+
+    Ok(HashParts &#123;
+        cost,
+        salt: BASE_64.encode(salt),
+        hash: BASE_64.encode(&amp;output[..23]), // remember to remove the last byte
+    &#125;)
+&#125;
+</code></pre>
+<p><strong>注意到</strong> <code>vec.push(0);</code>，在散列前将password添加 <code>\x00</code>。</p>
+<p><strong>而bcrypt会调用setup，初始化带有cost和salt的 Blowfish 加密状态。</strong></p>
+<pre><code>fn setup(cost: u32, salt: &amp;[u8], key: &amp;[u8]) -&gt; Blowfish &#123;
+    assert!(cost &lt; 32);
+    let mut state = Blowfish::bc_init_state();
+
+    state.salted_expand_key(salt, key);
+    for _ in 0..1u32 &lt;&lt; cost &#123;
+        state.bc_expand_key(key);
+        state.bc_expand_key(salt);
+    &#125;
+
+    state
+&#125;
+</code></pre>
+<p><strong>salted_expand_key会扩展key：</strong></p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/873ee3939a0b759b830f79ff4ca15a40.png" alt="873ee3939a0b759b830f79ff4ca15a40"></p>
+<p><strong>其中p是u32类型，这里会循环18次，也就是说刚好扩展到72字节！</strong></p>
+<p><strong>内部的处理流程大概是：</strong></p>
+<pre><code>venom --&gt;\x00作为分隔符
+venom\x00 --&gt; 循环填充key
+venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00
+</code></pre>
+<p><strong>因此得出结论，设字符为m，</strong> <code>&#123;m&#125;\x00&#123;m&#125;</code>和 <code>&#123;m&#125;</code>对应的hash结果是一致的！</p>
+<pre><code>import bcrypt
+salt = bcrypt.gensalt()
+
+password1 = b&#39;venom\x00venom&#39;
+password2 = b&#39;venom&#39;
+
+hash1 = bcrypt.hashpw(password1, salt)
+hash2 = bcrypt.hashpw(password2, salt)
+assert hash1 == hash2
+print(&quot;good&quot;)
+
+password1 = b&#39;couqi11zifu\x00couqi11zifu&#39;
+password2 = b&#39;couqi11zifu&#39;
+
+hash1 = bcrypt.hashpw(password1, salt)
+hash2 = bcrypt.hashpw(password2, salt)
+assert hash1 == hash2
+
+print(&quot;good&quot;)
+
+password1 = b&#39;124312111\x00124312111&#39;
+password2 = b&#39;124312111&#39;
+
+hash1 = bcrypt.hashpw(password1, salt)
+hash2 = bcrypt.hashpw(password2, salt)
+assert hash1 == hash2
+print(&quot;good&quot;)
+</code></pre>
+<h2 id="TODO"><a href="#TODO" class="headerlink" title="TODO"></a>TODO</h2><ol>
+<li><strong>调研其它语言bcrpt库的实现，是否存在类似的padding逻辑。</strong></li>
+</ol>
+
+    </div>
+
+    
+</div>
+    <div class="footer" id="footer">
+    <p><h4>版权所有 © 2020 | 作者: Squirt1e | 主题 By <a class="theme-author" target="_blank" rel="noopener" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
+    
+        <script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script>
+        <span id="busuanzi_container_site_pv">本站浏览总访问量: <span id="busuanzi_value_site_pv"></span></span>
+        <span class="post-meta-divider">|</span>
+        <span id="busuanzi_container_site_uv">本站访问人数: <span id="busuanzi_value_site_uv"></span></span>
+    
+    <label class="el-switch el-switch-blue el-switch-sm" style="vertical-align: sub;">
+        <input type="checkbox" name="switch" id="update_style">
+        <span class="el-switch-style"></span>
+    </label>
+
+    <!--         <script type="text/javascript">
+    var cnzz_protocol = (("https:" == document.location.protocol) ? "https://" : "http://");
+    document.write(unescape("%3Cspan id='cnzz_stat_icon_1278548644'%3E%3C/span%3E%3Cscript src='" + cnzz_protocol + "v1.cnzz.com/stat.php%3Fid%3D1278548644%26show%3Dpic1' type='text/javascript'%3E%3C/script%3E"));
+    </script> -->
+</p>
+</div>
+
+<input type="hidden" id="web_style" value="black">
+<input type="hidden" id="valine_appid" value="">
+<input type="hidden" id="valine_appKey" value="">
+
+<script src="/libs/jquery.min.js"></script>
+
+
+<script src="/libs/highlight/highlight.pack.js"></script>
+
+<script src='//cdn.jsdelivr.net/npm/valine@1.3.10/dist/Valine.min.js'></script>
+
+<script src="/js/js.js"></script>
+
+<style type="text/css">
+.v * {
+color: #698fca;
+}
+.v .vlist .vcard .vhead .vsys {
+color: #3a3e4a;
+}
+.v .vlist .vcard .vh .vmeta .vat {
+color: #638fd5;
+}
+.v .vlist .vcard .vhead .vnick {
+color: #6ba1ff;
+}
+.v a {
+color: #8696b1;
+}
+.v .vlist .vcard .vhead .vnick:hover {
+color: #669bfc;
+}
+</style>
+    <script type="text/javascript" color="173,174,173" opacity='1' zIndex="-2" count="99" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+</body>
+</html>

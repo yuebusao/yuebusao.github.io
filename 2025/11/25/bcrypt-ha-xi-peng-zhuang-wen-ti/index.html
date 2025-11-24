@@ -29,39 +29,12 @@
  replay-btn" aria-hidden="true"></i></a>
     <div class="post-title">
         <p>
-            
+            bcrypt哈希碰撞问题
         </p>
         <hr>
     </div>
     <div class="post-content">
-        <pre><code>
-title: bcrypt哈希碰撞问题
-
-top: false
-
-cover: false
-
-toc: true
-
-mathjax: false
-
-date: 2025-11-25 19:05:04
-
-author: Squirt1e
-
-img:
-
-coverImg:
-
-password:
-
-summary: 无
-
-tags: [安全研究]
-
-categories: 安全研究
-</code></pre>
-<p>USE CASE</p>
+        <p>USE CASE</p>
 <pre><code>salt = bcrypt.gensalt()
 hashed = bcrypt.hashpw(password, salt)
 if bcrypt.checkpw(password, hashed):
@@ -133,7 +106,7 @@ fn _hash_password(
 venom\x00 --&gt; 循环填充key
 venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00venom\x00
 </code></pre>
-<p><strong>因此得出结论，设字符为m，</strong> <code>&#123;m&#125;\x00&#123;m&#125;</code>和 <code>&#123;m&#125;</code>对应的hash结果是一致的！</p>
+<p><strong>因此得出结论，设字符为m，</strong> <code>&#123;m&#125;\x00&#123;m&#125;</code>和 <code>&#123;m&#125;</code>对应的hash结是一致的！</p>
 <pre><code>import bcrypt
 salt = bcrypt.gensalt()
 

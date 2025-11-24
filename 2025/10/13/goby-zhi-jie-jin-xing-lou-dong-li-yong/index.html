@@ -35,10 +35,10 @@
     </div>
     <div class="post-content">
         <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>最近需要使用Goby对目标进行批量化漏洞插件检测，但是Goby的漏洞检测逻辑是先进行资产的指纹识别，资产匹配上才会打对应的POC进行漏洞扫描。</p>
-<p>对于某些场景来说很不友好，扩展<code>goby_exp</code>说是能直接进行漏洞扫描，但是这个实现逻辑更不能理解。。开启直接检测模式居然要有一个任务扫描出对应的资产指纹，然后才能调用。</p>
-<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>可以观察到插件都有一个<code>GobyQuery</code>字段，在我的插件库里则是有<code>FofaQuery</code>和<code>GobyQuery</code>。</p>
+<p>对于某些场景来说很不友好，扩展 <code>goby_exp</code>说是能直接进行漏洞扫描，但是这个实现逻辑更不能理解。。开启直接检测模式居然要有一个任务扫描出对应的资产指纹，然后才能调用。</p>
+<h2 id="解决"><a href="#解决" class="headerlink" title="解决"></a>解决</h2><p>可以观察到插件都有一个 <code>GobyQuery</code>字段，在我的插件库里则是有 <code>FofaQuery</code>和 <code>GobyQuery</code>。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/cdab5b5e-7dc6-48c2-bab2-4ea6ad8dc251.png" alt="cdab5b5e-7dc6-48c2-bab2-4ea6ad8dc251"></p>
-<p>通过界面修改这两个字段发现<code>Goby</code>居然有强校验逻辑。</p>
+<p>通过界面修改这两个字段发现 <code>Goby</code>居然有强校验逻辑。</p>
 <p>所以，写个脚本把插件中的字段批量修改成通配符就行了（就是如此简单</p>
 <p>AI写的脚本有点问题，需要小小修改下：</p>
 <pre class="line-numbers language-python"><code class="language-python"><span class="token keyword">import</span> os

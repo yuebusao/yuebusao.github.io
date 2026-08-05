@@ -24,37 +24,97 @@
 <meta name="generator" content="Hexo 6.3.0"><link rel="stylesheet" href="/css/prism-tomorrow.css" type="text/css">
 <link rel="stylesheet" href="/css/prism-line-numbers.css" type="text/css"></head>
 <body id="bodyx">
-    <div class="hd posts">
-    <a href="/index.html"><i class="fa fa-home
- replay-btn" aria-hidden="true"></i></a>
-    <div class="post-title">
-        <p>
-            about
-        </p>
-        <hr>
-    </div>
-    <div class="post-content">
-        <h2 id="个人介绍"><a href="#个人介绍" class="headerlink" title="个人介绍"></a>个人介绍</h2><p>一个混子，曾经在NeSE和Venom参与过一些安全竞赛。</p>
-<p>2027-Now MiniMax</p>
-<p>2025-2026 华为</p>
-<h2 id="一些过去在做的事情"><a href="#一些过去在做的事情" class="headerlink" title="一些过去在做的事情"></a>一些过去在做的事情</h2><ul>
-<li>多智能体驱动的安全自动化运营(owner)</li>
-<li>基于黑盒的越权漏洞自动化检测(owner)</li>
-<li>0&#x2F;1 day 漏洞挖掘&#x2F;复现，威胁情报支撑</li>
-<li>一个神到难以描述的项目</li>
-<li>一些杂七杂八的活…</li>
-</ul>
-<h2 id="一些未来要做的事情"><a href="#一些未来要做的事情" class="headerlink" title="一些未来要做的事情"></a>一些未来要做的事情</h2><ol>
-<li>看周杰伦演唱会。</li>
-<li>10公里跑到50分钟。</li>
-<li>吃世界上最好吃的汉堡。</li>
-<li>发现非常非常牛逼的漏洞或trick。</li>
-</ol>
+    <div class="hd logodiv">
+    <img src="/img/avatar.jpg" class="logopng" alt="logo">
+    <p class="logot">
+         Squirt1e&#39;s Blog 
+         <span class="logo_2"></span>
+        <h3 class="words" style="font-weight: bold;font-family: Georgia;"> 
+            nobody 
+        </h3>
+    </p>
+</div>
 
-    </div>
 
+<div class="hd">
+    <ol class="breadcrumb">
+        
+            <li><a class="ba" href="/about">关于我👀</a></li>
+        
+            <li><a class="ba" target="_blank" rel="noopener" href="https://squirt1e.top">访问主站🎉</a></li>
+        
+            <li><a class="ba" target="_blank" rel="noopener" href="https://github.com/yuebusao">GitHub🐒</a></li>
+        
+
+            
+<script src="/libs/jquery.min.js"></script>
+
+            
+<script src="/js/search.js"></script>
+
+            
+                <form class="site-search-form">
+                    <i class="fa fa-search" id="search-logo"><input type="text" id="local-search-input" class="st-search-input" /></i>
+                </form>
+                <div id="local-search-result" class="local-search-result-cls"></div>
+            
+            <script type="text/javascript" id="local.search.active">
+                var inputArea       = document.querySelector("#local-search-input");
+                var getSearchFile = function(){
+                    var path = "/search.xml";
+                    searchFunc(path, 'local-search-input', 'local-search-result');
+                }
+                inputArea.onfocus = function(){ getSearchFile() }
+
+                var $resetButton = $("#search-form .fa-times");
+                var $resultArea = $("#local-search-result");
+
+                inputArea.oninput = function(){ $resetButton.show(); }
+                resetSearch = function(){
+                    $resultArea.html("");
+                    document.querySelector("#search-form").reset();
+                    $resetButton.hide();
+                    $(".no-result").hide();
+                }
+                inputArea.onkeydown = function(){ if(event.keyCode == 13) return false }
+                //No search result
+                $resultArea.bind("DOMNodeRemoved DOMNodeInserted", function(e) {
+                    if (!$(e.target).text()) {
+                        $(".no-result").show(100);
+                    } else {
+                        $(".no-result").hide();
+                    }
+                })
+            </script>
+
+    </ol>
+    <hr>
+</div>
+<div class="hd">
+    
+    
+        
+        
+            <div class="titlex">
+                <p><span class="jing"></span><span style="color: #6d9ee7;"> 公元</span> 
+                 2026年 🕛
+                </p>
+            </div>
+            
+        
+        <a class="flink" href="/2026/08/06/reset/">
+            <div class="list">
+                <div class="postname">
+                    Reset
+                </div>
+                <div class="posttime">
+                    August 6th
+                </div>
+            </div>
+        </a>
     
 </div>
+
     <div class="footer" id="footer">
     <p><h4>版权所有 © 2020 | 作者: Squirt1e | 主题 By <a class="theme-author" target="_blank" rel="noopener" href="https://github.com/Xunzhuo/hexo-theme-coder" style="font-size:14px; color: #969696">Coder</a></h4>
     
